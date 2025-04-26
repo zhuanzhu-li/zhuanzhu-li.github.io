@@ -7,14 +7,25 @@
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
         <copyright>zhuanzhu-li</copyright>
-        <lastBuildDate>Sat, 26 Apr 2025 18:55:01 +0800</lastBuildDate><atom:link href="https://zhuanzhu-li.github.io/post/index.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Sat, 26 Apr 2025 19:15:37 +0800</lastBuildDate><atom:link href="https://zhuanzhu-li.github.io/post/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>个人知识点复习</title>
+        <link>https://zhuanzhu-li.github.io/p/%E4%B8%AA%E4%BA%BA%E7%9F%A5%E8%AF%86%E7%82%B9%E5%A4%8D%E4%B9%A0/</link>
+        <pubDate>Sat, 26 Apr 2025 19:15:37 +0800</pubDate>
+        
+        <guid>https://zhuanzhu-li.github.io/p/%E4%B8%AA%E4%BA%BA%E7%9F%A5%E8%AF%86%E7%82%B9%E5%A4%8D%E4%B9%A0/</guid>
+        <description>&lt;p&gt;作为一个Java开发，这里记录当前使用过的技术栈，并且给出相应的熟练度评分&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>AI 学习日志</title>
         <link>https://zhuanzhu-li.github.io/p/ai-%E5%AD%A6%E4%B9%A0%E6%97%A5%E5%BF%97/</link>
         <pubDate>Sat, 26 Apr 2025 18:55:01 +0800</pubDate>
         
         <guid>https://zhuanzhu-li.github.io/p/ai-%E5%AD%A6%E4%B9%A0%E6%97%A5%E5%BF%97/</guid>
-        <description>&lt;h4 id=&#34;初衷&#34;&gt;初衷
-&lt;/h4&gt;&lt;p&gt;面对AI对开发者的影响越来越大，需要持续学习AI相关知识🤭&lt;/p&gt;
+        <description>&lt;p&gt;面对AI对开发者的影响越来越大，需要持续学习AI相关知识🤭&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;day1&lt;/li&gt;
+&lt;/ul&gt;
 </description>
         </item>
         
