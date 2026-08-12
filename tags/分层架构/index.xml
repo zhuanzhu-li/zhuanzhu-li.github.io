@@ -12,9 +12,16 @@
 			<copyright>Liwenqi</copyright>
 		
 		
-			<lastBuildDate>Sun, 10 Oct 2021 00:00:00 +0000</lastBuildDate>
+			<lastBuildDate>Thu, 12 May 2022 00:00:00 +0000</lastBuildDate>
 		
 			<atom:link href="https://liwenqikeep.github.io/tags/%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84/index.xml" rel="self" type="application/rss+xml" />
+			<item>
+				<title>系统架构设计方法论（二）：模块化与分层</title>
+				<link>https://liwenqikeep.github.io/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%8C%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B8%8E%E5%88%86%E5%B1%82/</link>
+				<pubDate>Thu, 12 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%8C%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B8%8E%E5%88%86%E5%B1%82/</guid>
+				<description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;&#xA;&lt;p&gt;需求与边界划清楚之后，下一个问题是怎么把系统组织成可维护的代码结构。最常见的失败不是没有架构，而是架构形同虚设：一个 5000 行的 Service 类、循环依赖成环、包结构按&amp;quot;controller/service/dao&amp;quot;机械分层，业务逻辑散落一地。&lt;/p&gt;&#xA;&lt;p&gt;模块化与分层要解决的是&lt;strong&gt;复杂度的组织问题&lt;/strong&gt;：让每个模块可以独立理解、独立修改、独立测试。&lt;/p&gt;</description>
+			</item>
 			<item>
 				<title>支付系统架构设计（一）：整体架构概览</title>
 				<link>https://liwenqikeep.github.io/posts/%E6%94%AF%E4%BB%98%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%80%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84%E6%A6%82%E8%A7%88/</link>

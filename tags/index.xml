@@ -12,14 +12,112 @@
 			<copyright>Liwenqi</copyright>
 		
 		
-			<lastBuildDate>Tue, 23 Jun 2026 00:00:00 +0000</lastBuildDate>
+			<lastBuildDate>Tue, 11 Aug 2026 00:00:00 +0000</lastBuildDate>
 		
 			<atom:link href="https://liwenqikeep.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
 			<item>
+				<title>AI Agent</title>
+				<link>https://liwenqikeep.github.io/tags/ai-agent/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/ai-agent/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>AkShare</title>
+				<link>https://liwenqikeep.github.io/tags/akshare/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/akshare/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>DeepSeek</title>
+				<link>https://liwenqikeep.github.io/tags/deepseek/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/deepseek/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>Python</title>
+				<link>https://liwenqikeep.github.io/tags/python/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/python/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>SQLite</title>
+				<link>https://liwenqikeep.github.io/tags/sqlite/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/sqlite/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>SVG</title>
+				<link>https://liwenqikeep.github.io/tags/svg/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/svg/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>财报</title>
+				<link>https://liwenqikeep.github.io/tags/%E8%B4%A2%E6%8A%A5/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E8%B4%A2%E6%8A%A5/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>盯盘</title>
+				<link>https://liwenqikeep.github.io/tags/%E7%9B%AF%E7%9B%98/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E7%9B%AF%E7%9B%98/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>多Agent</title>
+				<link>https://liwenqikeep.github.io/tags/%E5%A4%9Aagent/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E5%A4%9Aagent/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>股票</title>
+				<link>https://liwenqikeep.github.io/tags/%E8%82%A1%E7%A5%A8/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E8%82%A1%E7%A5%A8/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>可视化</title>
+				<link>https://liwenqikeep.github.io/tags/%E5%8F%AF%E8%A7%86%E5%8C%96/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E5%8F%AF%E8%A7%86%E5%8C%96/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>向量记忆</title>
+				<link>https://liwenqikeep.github.io/tags/%E5%90%91%E9%87%8F%E8%AE%B0%E5%BF%86/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E5%90%91%E9%87%8F%E8%AE%B0%E5%BF%86/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>舆情</title>
+				<link>https://liwenqikeep.github.io/tags/%E8%88%86%E6%83%85/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E8%88%86%E6%83%85/</guid>
+				<description></description>
+			</item>
+			<item>
 				<title>Agent</title>
 				<link>https://liwenqikeep.github.io/tags/agent/</link>
-				<pubDate>Tue, 23 Jun 2026 00:00:00 +0000</pubDate>
+				<pubDate>Wed, 08 Jul 2026 00:00:00 +0000</pubDate>
 				<guid>https://liwenqikeep.github.io/tags/agent/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>AI Harness</title>
+				<link>https://liwenqikeep.github.io/tags/ai-harness/</link>
+				<pubDate>Wed, 08 Jul 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/ai-harness/</guid>
 				<description></description>
 			</item>
 			<item>
@@ -132,6 +230,118 @@
 				<link>https://liwenqikeep.github.io/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/</link>
 				<pubDate>Wed, 10 Apr 2024 00:00:00 +0000</pubDate>
 				<guid>https://liwenqikeep.github.io/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>技术债</title>
+				<link>https://liwenqikeep.github.io/tags/%E6%8A%80%E6%9C%AF%E5%80%BA/</link>
+				<pubDate>Wed, 18 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E6%8A%80%E6%9C%AF%E5%80%BA/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>架构设计</title>
+				<link>https://liwenqikeep.github.io/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/</link>
+				<pubDate>Wed, 18 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>架构演进</title>
+				<link>https://liwenqikeep.github.io/tags/%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B/</link>
+				<pubDate>Wed, 18 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>架构治理</title>
+				<link>https://liwenqikeep.github.io/tags/%E6%9E%B6%E6%9E%84%E6%B2%BB%E7%90%86/</link>
+				<pubDate>Wed, 18 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E6%9E%B6%E6%9E%84%E6%B2%BB%E7%90%86/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>可用性</title>
+				<link>https://liwenqikeep.github.io/tags/%E5%8F%AF%E7%94%A8%E6%80%A7/</link>
+				<pubDate>Mon, 16 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E5%8F%AF%E7%94%A8%E6%80%A7/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>扩展性</title>
+				<link>https://liwenqikeep.github.io/tags/%E6%89%A9%E5%B1%95%E6%80%A7/</link>
+				<pubDate>Mon, 16 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E6%89%A9%E5%B1%95%E6%80%A7/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>性能</title>
+				<link>https://liwenqikeep.github.io/tags/%E6%80%A7%E8%83%BD/</link>
+				<pubDate>Mon, 16 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E6%80%A7%E8%83%BD/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>技术选型</title>
+				<link>https://liwenqikeep.github.io/tags/%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B/</link>
+				<pubDate>Sat, 14 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>决策</title>
+				<link>https://liwenqikeep.github.io/tags/%E5%86%B3%E7%AD%96/</link>
+				<pubDate>Sat, 14 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E5%86%B3%E7%AD%96/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>开源</title>
+				<link>https://liwenqikeep.github.io/tags/%E5%BC%80%E6%BA%90/</link>
+				<pubDate>Sat, 14 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E5%BC%80%E6%BA%90/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>分层架构</title>
+				<link>https://liwenqikeep.github.io/tags/%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84/</link>
+				<pubDate>Thu, 12 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>模块化</title>
+				<link>https://liwenqikeep.github.io/tags/%E6%A8%A1%E5%9D%97%E5%8C%96/</link>
+				<pubDate>Thu, 12 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E6%A8%A1%E5%9D%97%E5%8C%96/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>依赖管理</title>
+				<link>https://liwenqikeep.github.io/tags/%E4%BE%9D%E8%B5%96%E7%AE%A1%E7%90%86/</link>
+				<pubDate>Thu, 12 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E4%BE%9D%E8%B5%96%E7%AE%A1%E7%90%86/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>边界划分</title>
+				<link>https://liwenqikeep.github.io/tags/%E8%BE%B9%E7%95%8C%E5%88%92%E5%88%86/</link>
+				<pubDate>Tue, 10 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E8%BE%B9%E7%95%8C%E5%88%92%E5%88%86/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>领域建模</title>
+				<link>https://liwenqikeep.github.io/tags/%E9%A2%86%E5%9F%9F%E5%BB%BA%E6%A8%A1/</link>
+				<pubDate>Tue, 10 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E9%A2%86%E5%9F%9F%E5%BB%BA%E6%A8%A1/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>需求分析</title>
+				<link>https://liwenqikeep.github.io/tags/%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90/</link>
+				<pubDate>Tue, 10 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/tags/%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90/</guid>
 				<description></description>
 			</item>
 			<item>
@@ -702,13 +912,6 @@
 				<description></description>
 			</item>
 			<item>
-				<title>技术选型</title>
-				<link>https://liwenqikeep.github.io/tags/%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B/</link>
-				<pubDate>Mon, 01 Nov 2021 00:00:00 +0000</pubDate>
-				<guid>https://liwenqikeep.github.io/tags/%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B/</guid>
-				<description></description>
-			</item>
-			<item>
 				<title>告警</title>
 				<link>https://liwenqikeep.github.io/tags/%E5%91%8A%E8%AD%A6/</link>
 				<pubDate>Thu, 28 Oct 2021 00:00:00 +0000</pubDate>
@@ -930,20 +1133,6 @@
 				<link>https://liwenqikeep.github.io/tags/%E9%A2%86%E5%9F%9F%E4%BA%8B%E4%BB%B6/</link>
 				<pubDate>Tue, 12 Oct 2021 00:00:00 +0000</pubDate>
 				<guid>https://liwenqikeep.github.io/tags/%E9%A2%86%E5%9F%9F%E4%BA%8B%E4%BB%B6/</guid>
-				<description></description>
-			</item>
-			<item>
-				<title>分层架构</title>
-				<link>https://liwenqikeep.github.io/tags/%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84/</link>
-				<pubDate>Sun, 10 Oct 2021 00:00:00 +0000</pubDate>
-				<guid>https://liwenqikeep.github.io/tags/%E5%88%86%E5%B1%82%E6%9E%B6%E6%9E%84/</guid>
-				<description></description>
-			</item>
-			<item>
-				<title>架构设计</title>
-				<link>https://liwenqikeep.github.io/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/</link>
-				<pubDate>Sun, 10 Oct 2021 00:00:00 +0000</pubDate>
-				<guid>https://liwenqikeep.github.io/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/</guid>
 				<description></description>
 			</item>
 			<item>
@@ -1630,13 +1819,6 @@
 				<link>https://liwenqikeep.github.io/tags/%E4%BC%A0%E9%80%92%E4%BE%9D%E8%B5%96/</link>
 				<pubDate>Tue, 12 Mar 2019 00:00:00 +0000</pubDate>
 				<guid>https://liwenqikeep.github.io/tags/%E4%BC%A0%E9%80%92%E4%BE%9D%E8%B5%96/</guid>
-				<description></description>
-			</item>
-			<item>
-				<title>依赖管理</title>
-				<link>https://liwenqikeep.github.io/tags/%E4%BE%9D%E8%B5%96%E7%AE%A1%E7%90%86/</link>
-				<pubDate>Tue, 12 Mar 2019 00:00:00 +0000</pubDate>
-				<guid>https://liwenqikeep.github.io/tags/%E4%BE%9D%E8%B5%96%E7%AE%A1%E7%90%86/</guid>
 				<description></description>
 			</item>
 			<item>

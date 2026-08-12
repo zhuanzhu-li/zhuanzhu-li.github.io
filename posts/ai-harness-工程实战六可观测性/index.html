@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>AI Harness 工程实战（六）：可观测性 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一场景agent-跑挂了没人知道哪一步">一、场景：agent 跑挂了，没人知道哪一步</a></li>
+    <li><a href="#二朴素实现print-大法">二、朴素实现：print 大法</a></li>
+    <li><a href="#三它暴露了哪些问题">三、它暴露了哪些问题</a></li>
+    <li><a href="#四工程化演进事件总线--结构化日志--成本核算">四、工程化演进：事件总线 + 结构化日志 + 成本核算</a>
+      <ul>
+        <li><a href="#1-事件总线每个关键动作发一个事件">1. 事件总线：每个关键动作发一个事件</a></li>
+        <li><a href="#2-接入模型调用usage-与成本">2. 接入模型调用：usage 与成本</a></li>
+        <li><a href="#3-接入-agent步骤工具调用-span">3. 接入 Agent：步骤、工具调用 span</a></li>
+        <li><a href="#4-汇总">4. 汇总</a></li>
+      </ul>
+    </li>
+    <li><a href="#五为什么这样设计">五、为什么这样设计</a></li>
+    <li><a href="#六小结">六、小结</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">AI Harness 工程实战（六）：可观测性</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%80%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-harness/">AI Harness 工程实战（一）：为什么需要 harness</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%BA%8C%E5%A4%9A%E8%BD%AE%E5%AF%B9%E8%AF%9D%E4%B8%8E%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AE%A1%E7%90%86/">AI Harness 工程实战（二）：多轮对话与上下文管理</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%89%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E5%BE%AA%E7%8E%AF/">AI Harness 工程实战（三）：工具调用循环</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%9B%9B%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E4%B8%8E%E9%87%8D%E8%AF%95/">AI Harness 工程实战（四）：结构化输出与重试</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%BA%94%E6%9D%83%E9%99%90%E4%B8%8E%E6%B2%99%E7%AE%B1/">AI Harness 工程实战（五）：权限与沙箱</a></li>
+<li>本文：AI Harness 工程实战（六）：可观测性</li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%83%E5%A6%82%E4%BD%95%E8%AF%84%E6%B5%8B%E8%BF%99%E4%B8%AA-harness/">AI Harness 工程实战（七）：如何评测这个 harness</a></li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p>第五篇之前，harness 会聊天、会调工具、会守边界。但它仍然是个<strong>黑盒</strong>：一次任务跑了 5 轮循环、调了 3 次工具、花了多少钱、哪一步出的问题——没人知道。</p>
+<p>这一篇做三件事：<strong>结构化日志</strong>（每步干了什么）、<strong>事件钩子</strong>（谁都能订阅）、<strong>成本核算</strong>（每次调用花了多少 token 和钱）。做完之后，agent 不再是黑盒，出问题能按图索骥。</p>
+<h2 id="一场景agent-跑挂了没人知道哪一步">一、场景：agent 跑挂了，没人知道哪一步</h2>
+<p>线上一个 agent 任务失败。你问自己：</p>
+<ol>
+<li>它调了几次模型？每次多少 token？</li>
+<li>它调了哪些工具？参数是什么？哪个工具返回了异常？</li>
+<li>哪一步开始偏离预期？</li>
+</ol>
+<p>如果代码里只有 <code>print(&quot;调用了工具&quot;)</code>，这三个问题一个都答不上来。</p>
+<h2 id="二朴素实现print-大法">二、朴素实现：print 大法</h2>
+<pre><code class="language-python">print(&quot;开始执行&quot;)
+print(&quot;调用工具：&quot;, tool_name)
+print(&quot;结果：&quot;, result)
+print(&quot;完成&quot;)
+</code></pre>
+<p>本地调试够用，上线之后：日志被刷屏、检索靠眼、多用户请求互相串、想按&quot;某一次任务&quot;查日志根本做不到。</p>
+<h2 id="三它暴露了哪些问题">三、它暴露了哪些问题</h2>
+<ul>
+<li><strong>日志没有结构</strong>：print 输出是给人看的，不是给系统检索的。想按 request_id、事件类型过滤？没有。</li>
+<li><strong>关键动作没埋点</strong>：token、成本、模型名、上下文大小这些&quot;运维数据&quot;根本没记录。</li>
+<li><strong>流程无法串联</strong>：一次任务有多次模型调用 + 多次工具调用，彼此之间没有关联标识，出了问题拼不出因果链。</li>
+<li><strong>埋点侵入业务</strong>：硬编码的 print 散落在各处，想接日志系统要改一堆代码。</li>
+</ul>
+<h2 id="四工程化演进事件总线--结构化日志--成本核算">四、工程化演进：事件总线 + 结构化日志 + 成本核算</h2>
+<h3 id="1-事件总线每个关键动作发一个事件">1. 事件总线：每个关键动作发一个事件</h3>
+<p><code>Telemetry</code> 是一个极简事件总线，<code>emit</code> 把事件写成结构化 JSON 日志，同时通知订阅者：</p>
+<pre><code class="language-python">@dataclass
+class Telemetry:
+    def emit(self, event: str, data: dict) -&gt; None:
+        payload = {
+            &quot;event&quot;: event,
+            &quot;request_id&quot;: self.request_id,   # 贯穿一次任务
+            &quot;ts&quot;: time.time(),
+            **data,
+        }
+        logger.info(json.dumps(payload, ensure_ascii=False))
+        if self.on_event is not None:
+            self.on_event(event, payload)     # 订阅者：打印、接监控系统都行
+</code></pre>
+<p><code>request_id</code> 在 Telemetry 创建时生成，贯穿整个任务——这就是&quot;链路追踪&quot;的最小形态：一次任务的所有日志，用同一个 id 串起来。</p>
+<h3 id="2-接入模型调用usage-与成本">2. 接入模型调用：usage 与成本</h3>
+<p>模型响应自带 <code>usage</code>（prompt/completion/total tokens）。<code>LLMClient</code> 在每次成功后把它记入 Telemetry，并按价格表折算成本：</p>
+<pre><code class="language-python">telemetry.record_usage(Usage(prompt_tokens, completion_tokens, total_tokens))
+telemetry.emit(&quot;llm.call&quot;, {
+    &quot;model&quot;: self.config.model,
+    &quot;total_tokens&quot;: total_tokens,
+    &quot;cost_usd&quot;: round(cost_usd, 6),
+})
+</code></pre>
+<p>一个关键工程细节：<strong>埋点失败不能影响主流程</strong>。<code>_record_usage</code> 整体包在 <code>try/except</code> 里，Telemetry 挂了，模型调用照常返回——可观测性永远不能成为可用性的依赖。</p>
+<h3 id="3-接入-agent步骤工具调用-span">3. 接入 Agent：步骤、工具调用 span</h3>
+<p><code>Agent</code> 在循环的每个关键节点发事件：</p>
+<pre><code class="language-python">telemetry.emit(&quot;agent.start&quot;, {&quot;input&quot;: user_input, &quot;max_steps&quot;: self.max_steps})
+telemetry.emit(&quot;agent.step&quot;, {&quot;step&quot;: step, &quot;context_tokens&quot;: ...})
+
+span_id = telemetry.start_span(&quot;tool.call&quot;, {&quot;tool&quot;: tool_name, &quot;arguments&quot;: arguments})
+result = tool_impl.run(**arguments)
+telemetry.end_span(span_id, {&quot;tool&quot;: tool_name, &quot;result_len&quot;: len(result)})
+
+telemetry.emit(&quot;agent.end&quot;, {&quot;steps&quot;: step, &quot;answer_len&quot;: len(content)})
+</code></pre>
+<p><code>start_span</code> / <code>end_span</code> 是简化版 tracing：记录一次工具调用的耗时（<code>duration_ms</code>）。生产环境可以换成 OpenTelemetry，但思路一模一样。</p>
+<h3 id="4-汇总">4. 汇总</h3>
+<p>一次任务结束，<code>summary()</code> 给出账单式汇总：</p>
+<pre><code class="language-text">{'calls': 3, 'prompt_tokens': 4120, 'completion_tokens': 356,
+ 'total_tokens': 4476, 'cost_usd': 0.00114}
+</code></pre>
+<h2 id="五为什么这样设计">五、为什么这样设计</h2>
+<ul>
+<li><strong>结构化优先</strong>：JSON 日志可以被日志系统直接索引；print 不能。</li>
+<li><strong>事件总线解耦</strong>：harness 不知道订阅者是谁，只负责发事件——接日志、接监控、接 UI 都是订阅者的事，harness 代码不用改。</li>
+<li><strong>数据进、成本出</strong>：usage 是模型 API 自带的数据，harness 只负责收集和折算；成本透明，才能做预算控制（下一篇评测里会用到）。</li>
+<li><strong>埋点零风险</strong>：可观测性代码永远不能让主流程更脆弱。</li>
+</ul>
+<h2 id="六小结">六、小结</h2>
+<p>本篇的收获：</p>
+<ol>
+<li>可观测性 = 结构化日志 + 事件钩子 + 成本核算，三者合起来让 agent 不再是黑盒。</li>
+<li><code>request_id</code> 贯穿 + span 记录耗时，就是最小可用的链路追踪。</li>
+<li>埋点必须零侵入主流程，失败也不影响调用。</li>
+</ol>
+<p>配套仓库当前在 <code>lesson-06</code> tag，代码见 <code>harness/telemetry.py</code>。</p>
+<p>下一篇是系列的收尾，也是把前面所有工作串起来的一篇：<strong>如何评测这个 harness</strong>——fake LLM、eval 集、成功率与成本指标，让&quot;改一行代码是变好还是变坏&quot;从感觉变成数据。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

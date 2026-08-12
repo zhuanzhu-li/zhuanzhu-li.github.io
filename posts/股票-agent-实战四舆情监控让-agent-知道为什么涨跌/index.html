@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>股票 Agent 实战（四）：舆情监控——让 agent 知道为什么涨跌 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一数据源调研又踩到一个上游-bug">一、数据源调研：又踩到一个上游 bug</a></li>
+    <li><a href="#二情绪评分规则优先模型解读">二、情绪评分：规则优先，模型解读</a></li>
+    <li><a href="#三工具get_news_sentiment">三、工具：get_news_sentiment</a></li>
+    <li><a href="#四运行与验证">四、运行与验证</a></li>
+    <li><a href="#五小结">五、小结</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">股票 Agent 实战（四）：舆情监控——让 agent 知道为什么涨跌</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/">股票 Agent 实战（一）：把行情变成工具</a></li>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%8C%E8%B4%A2%E6%8A%A5%E8%A7%A3%E8%AF%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA/">股票 Agent 实战（二）：财报解读与结构化输出</a></li>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%89%E7%9B%AF%E7%9B%98%E6%8F%90%E9%86%92%E4%BB%8E%E8%A2%AB%E5%8A%A8%E9%97%AE%E7%AD%94%E5%88%B0%E4%B8%BB%E5%8A%A8%E7%9B%91%E6%8E%A7/">股票 Agent 实战（三）：盯盘提醒</a></li>
+<li>本文：股票 Agent 实战（四）：舆情监控——让 agent 知道为什么涨跌</li>
+<li>下一篇：记忆与多 Agent（写作中）</li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p>前三课，agent 知道了「是什么」：价格多少（行情）、公司赚不赚钱（财报）、跌破没跌破（盯盘）。这一课补上「<strong>为什么</strong>」：市场在说什么、情绪往哪边偏——<strong>新闻与舆情</strong>。</p>
+<h2 id="一数据源调研又踩到一个上游-bug">一、数据源调研：又踩到一个上游 bug</h2>
+<p>第一件事是验证舆情数据源。AkShare 有个个股新闻接口 <code>stock_news_em</code>，一跑就报错：</p>
+<pre><code class="language-text">ArrowInvalid: Invalid regular expression: invalid escape sequence: \u
+</code></pre>
+<p>翻了源码：接口在清洗标题时用了 <code>str.replace(r&quot;\u3000&quot;, &quot;&quot;, regex=True)</code> 这类正则，在 pandas 3.0 / pyarrow 下属于非法转义——<strong>AkShare 的上游 bug</strong>，不是我们的问题。</p>
+<p>处理方式和第一课「UA 断连」一模一样：<strong>数据源层直连 HTTP</strong>。东方财富的新闻搜索接口直接返回 JSONP，自己解析、自己清洗 <code>&lt;em&gt;</code> 高亮标签，工具层和 agent 完全无感：</p>
+<pre><code class="language-python">def news_list(symbol: str, limit: int = 10) -&gt; list[dict]:
+    &quot;&quot;&quot;个股新闻列表（直连东方财富搜索接口）。&quot;&quot;&quot;
+    ...
+    return [
+        {&quot;title&quot;: _strip_em(row[&quot;title&quot;]), &quot;source&quot;: row[&quot;mediaName&quot;], &quot;time&quot;: row[&quot;date&quot;]}
+        for row in rows[:limit]
+    ]
+</code></pre>
+<p>第一课的分层哲学在这里第二次兑现：<strong>库坏了，换实现，上层不动。</strong></p>
+<h2 id="二情绪评分规则优先模型解读">二、情绪评分：规则优先，模型解读</h2>
+<p>「情绪」先给一个确定性定义，用<strong>词典规则</strong>：标题命中「利好、涨价、增持、超预期…」记正面，命中「亏损、减持、立案、暴雷…」记负面，谁多算谁；再聚合出 <code>score ∈ [-1, 1]</code>：</p>
+<pre><code class="language-python">def classify_title(title: str) -&gt; str:
+    pos = sum(1 for w in POSITIVE_WORDS if w in title)
+    neg = sum(1 for w in NEGATIVE_WORDS if w in title)
+    return &quot;positive&quot; if pos &gt; neg else &quot;negative&quot; if neg &gt; pos else &quot;neutral&quot;
+
+def score_news(news):
+    score = (positive - negative) / max(1, len(news))  # [-1, 1]
+</code></pre>
+<p>延续第三课的原则：<strong>评分是规则的事（可靠、可测、零成本），解读才是模型的事</strong>。agent 拿到 <code>score</code> 和新闻列表后，用自然语言解释「为什么偏积极」。</p>
+<h2 id="三工具get_news_sentiment">三、工具：get_news_sentiment</h2>
+<p>与前面的工具完全同构，注册进同一个注册表，问答 agent 就多了一个器官：</p>
+<pre><code class="language-python">@tool(
+    name=&quot;get_news_sentiment&quot;,
+    description=&quot;获取 A 股个股最近的新闻标题并给出情绪评分（score 范围 -1~1，&gt;0 偏积极），&quot;
+                &quot;返回正/负/中性新闻数量与新闻列表，用于舆情分析。&quot;,
+    parameters={
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+            &quot;symbol&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;6 位 A 股股票代码&quot;},
+            &quot;limit&quot;: {&quot;type&quot;: &quot;integer&quot;, &quot;description&quot;: &quot;取最近 N 条新闻，默认 10，最多 30&quot;}
+        },
+        &quot;required&quot;: [&quot;symbol&quot;],
+    },
+)
+def get_news_sentiment(symbol: str, limit: int = 10) -&gt; dict:
+    return score_news(data_source.news_list(symbol, limit))
+</code></pre>
+<h2 id="四运行与验证">四、运行与验证</h2>
+<pre><code class="language-bash">conda activate stock-agent   # 每次开新终端先切换环境
+python stock-agent/main.py &quot;贵州茅台最近有什么新闻？市场情绪怎么样？&quot;
+</code></pre>
+<p>真实输出要点：</p>
+<pre><code class="language-text">核心事件：飞天茅台连续提价（i茅台 1539→1639 元，自营店涨至 1753 元/瓶）
+资金动向：8月10日主力净流入 4.89 亿元，食品饮料板块流入居前
+
+情绪评分：+0.2（偏积极）｜ 正面 5 条 / 负面 3 条 / 中性 2 条
+情绪解读：提价利好是主要正面驱动，白酒板块资金流出带来负面扰动，多空交织。
+</code></pre>
+<p>离线测试从 13 项增至 <strong>18 项</strong>（新增：词典分类、聚合评分、工具输出与标签清洗），全部不联网。</p>
+<h2 id="五小结">五、小结</h2>
+<p>第四课的收获：</p>
+<ol>
+<li><strong>舆情数据源同样会踩坑</strong>——上游库在版本升级后坏掉是常态，数据源层直连 HTTP 是第二道保险；</li>
+<li><strong>情绪评分用词典规则</strong>——确定性、可测、零成本，评分与解读分工明确；</li>
+<li><strong>工具注册即能力</strong>——agent 每多一个工具就多一种感知，架构不需要变；</li>
+<li><strong>两个真实小坑</strong>——Windows 控制台 GBK 编码遇到 ⚠ 会崩（<code>reconfigure(errors=&quot;replace&quot;)</code> 解决）、漏 import json——都被 harness 的「工具出错返回文本」设计兜住了，agent 从容转向其他工具。</li>
+</ol>
+<p>下一步：<strong>记忆与多 Agent</strong>——把对话记忆升级为向量记忆（环境里已备好 faiss / sentence-transformers），并让「行情分析师」「财报解读师」「舆情观察员」各司其职、协作回答。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

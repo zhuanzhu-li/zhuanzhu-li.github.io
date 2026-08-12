@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>AI Harness 工程实战（一）：为什么需要 harness - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一场景给你的业务接上-deepseek">一、场景：给你的业务接上 DeepSeek</a></li>
+    <li><a href="#二朴素实现能跑但很脆">二、朴素实现：能跑，但很脆</a></li>
+    <li><a href="#三它暴露了哪些问题">三、它暴露了哪些问题</a></li>
+    <li><a href="#四工程化演进最小封装">四、工程化演进：最小封装</a></li>
+    <li><a href="#五为什么这样设计">五、为什么这样设计</a></li>
+    <li><a href="#六小结">六、小结</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">AI Harness 工程实战（一）：为什么需要 harness</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li>本文：AI Harness 工程实战（一）：为什么需要 harness</li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%BA%8C%E5%A4%9A%E8%BD%AE%E5%AF%B9%E8%AF%9D%E4%B8%8E%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AE%A1%E7%90%86/">AI Harness 工程实战（二）：多轮对话与上下文管理</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%89%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E5%BE%AA%E7%8E%AF/">AI Harness 工程实战（三）：工具调用循环</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%9B%9B%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E4%B8%8E%E9%87%8D%E8%AF%95/">AI Harness 工程实战（四）：结构化输出与重试</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%BA%94%E6%9D%83%E9%99%90%E4%B8%8E%E6%B2%99%E7%AE%B1/">AI Harness 工程实战（五）：权限与沙箱</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%85%AD%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/">AI Harness 工程实战（六）：可观测性</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%83%E5%A6%82%E4%BD%95%E8%AF%84%E6%B5%8B%E8%BF%99%E4%B8%AA-harness/">AI Harness 工程实战（七）：如何评测这个 harness</a></li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p>调用大模型 API 已经不是新鲜事了。但&quot;能调通&quot;和&quot;能工程化地调&quot;之间，隔着一条很多人踩过的沟：key 写在哪、超时怎么办、限流怎么退避、失败怎么反馈给用户、代码怎么测试……这些细节散落在业务代码里，就是一笔笔技术债。</p>
+<p>这个系列想做的事很明确：<strong>不依赖任何框架，从零手搭一个 AI Harness</strong>——把&quot;模型&quot;包起来的那层工程运行时。我们会像写业务代码一样，一篇文章加一个能力，每加一个能力就引出它背后真实的工程问题：上下文管理、工具调用、结构化输出、沙箱、可观测性、评测。</p>
+<p>配套代码在仓库 <a href="https://github.com/liwenqikeep/ai-harness-tutorial">ai-harness-tutorial</a>，每篇文章对应一个 tag，你可以 clone 后 <code>git checkout lesson-XX</code> 直接看到那一篇的代码状态。本系列面向有后端基础、想真正搞懂 agent 每一层的工程师。</p>
+<p>本篇是系列第一块砖：<strong>一次模型调用的最小封装</strong>。我们从&quot;最朴素地调一次 DeepSeek&quot;开始，看它怎么一步步长成一个 harness。</p>
+<h2 id="一场景给你的业务接上-deepseek">一、场景：给你的业务接上 DeepSeek</h2>
+<p>假设你的后端要加一个 AI 功能：用户提问，模型回答。听起来很简单——就是发一个 HTTP 请求：</p>
+<pre><code class="language-http">POST https://api.deepseek.com/chat/completions
+Content-Type: application/json
+Authorization: Bearer &lt;DEEPSEEK_API_KEY&gt;
+
+{
+  &quot;model&quot;: &quot;deepseek-chat&quot;,
+  &quot;messages&quot;: [
+    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;用一句话介绍你自己&quot;}
+  ]
+}
+</code></pre>
+<p>返回的 JSON 里，<code>choices[0].message.content</code> 就是模型的回答。第一版代码通常长这样。</p>
+<h2 id="二朴素实现能跑但很脆">二、朴素实现：能跑，但很脆</h2>
+<pre><code class="language-python">import os
+
+import requests
+
+API_KEY = os.environ[&quot;DEEPSEEK_API_KEY&quot;]
+URL = &quot;https://api.deepseek.com/chat/completions&quot;
+
+resp = requests.post(
+    URL,
+    headers={&quot;Authorization&quot;: f&quot;Bearer {API_KEY}&quot;},
+    json={
+        &quot;model&quot;: &quot;deepseek-chat&quot;,
+        &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;用一句话介绍你自己&quot;}],
+    },
+)
+
+print(resp.json()[&quot;choices&quot;][0][&quot;message&quot;][&quot;content&quot;])
+</code></pre>
+<p>跑起来大概长这样：</p>
+<pre><code class="language-text">$ python lessons/lesson_01/naive_call.py
+我是 DeepSeek Chat，一个由深度求索公司开发的 AI 助手，专注于提供准确、实用的信息与帮助。
+</code></pre>
+<p>能跑。但别高兴太早——这段代码在真实项目里活不过第一周。</p>
+<h2 id="三它暴露了哪些问题">三、它暴露了哪些问题</h2>
+<ul>
+<li><strong>配置散落且硬编码</strong>：URL、模型名写死在代码里。换模型、换供应商、改超时，都要翻代码。</li>
+<li><strong>没有超时</strong>：<code>requests.post</code> 默认无限等。模型偶发慢响应时，你的接口也跟着挂。</li>
+<li><strong>没有错误处理</strong>：网络一抖抛 <code>requests</code> 异常；429 限流、5xx 直接崩；用户看到的是 500，没人知道为什么。</li>
+<li><strong>成功路径也很脆</strong>：<code>resp.json()[&quot;choices&quot;][0][&quot;message&quot;][&quot;content&quot;]</code> 任何一层结构不对就 <code>KeyError</code>。</li>
+<li><strong>不可测试</strong>：想 mock 一次调用，得把 URL、headers、json 全部 mock 一遍，测试和实现强耦合。</li>
+</ul>
+<p>这些问题的共同点是：<strong>模型调用的工程细节和业务代码混在一起</strong>。一个接口里混进了网络、错误处理、配置，业务逻辑反而看不清。</p>
+<h2 id="四工程化演进最小封装">四、工程化演进：最小封装</h2>
+<p>harness 的第一步，就是把这些问题收进一个类里。原则很简单：<strong>调用方只关心&quot;发消息、拿回复&quot;，其余全部封装</strong>。</p>
+<p>先看配置——从环境变量读取，缺 key 时给出看得懂的报错：</p>
+<pre><code class="language-python">@dataclass
+class LLMConfig:
+    api_key: str
+    base_url: str = &quot;https://api.deepseek.com&quot;
+    model: str = &quot;deepseek-chat&quot;
+    timeout: float = 30.0
+    max_retries: int = 3
+
+    @classmethod
+    def from_env(cls):
+        api_key = os.getenv(&quot;DEEPSEEK_API_KEY&quot;, &quot;&quot;).strip()
+        if not api_key:
+            raise LLMConfigError(&quot;未设置 DEEPSEEK_API_KEY&quot;)
+        return cls(api_key=api_key, ...)
+</code></pre>
+<p>再看核心的 <code>LLMClient</code>——超时、重试、错误分类都在这里收口：</p>
+<pre><code class="language-python">class LLMClient:
+    def __init__(self, config=None):
+        self.config = config or LLMConfig.from_env()
+        self.session = requests.Session()
+        self.session.headers.update(
+            {&quot;Authorization&quot;: f&quot;Bearer {self.config.api_key}&quot;}
+        )
+
+    def chat(self, messages):
+        # 带超时；429/5xx/网络异常指数退避重试；
+        # 所有失败统一抛 LLMError，并标记 retryable
+        ...
+</code></pre>
+<p>调用方变成了三行：</p>
+<pre><code class="language-python">from dotenv import load_dotenv
+
+from harness import LLMClient
+
+load_dotenv()
+client = LLMClient()
+print(client.chat([{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;用一句话介绍你自己&quot;}]))
+</code></pre>
+<p>这一版解决了朴素版的哪些问题：</p>
+<table>
+	<thead>
+			<tr>
+					<th>朴素版问题</th>
+					<th>封装后的处理</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>配置硬编码</td>
+					<td><code>LLMConfig.from_env()</code> 从环境变量读取，<code>.env.example</code> 留档</td>
+			</tr>
+			<tr>
+					<td>没有超时</td>
+					<td>统一 <code>timeout=30s</code>，可配置</td>
+			</tr>
+			<tr>
+					<td>没有错误处理</td>
+					<td>统一异常 <code>LLMError</code>，调用方能捕获并分类处理</td>
+			</tr>
+			<tr>
+					<td>失败就崩</td>
+					<td>429 / 5xx / 网络异常自动重试，指数退避</td>
+			</tr>
+			<tr>
+					<td>不可测试</td>
+					<td>可以注入 mock 配置和 session，测试只针对 <code>chat()</code> 的输入输出</td>
+			</tr>
+	</tbody>
+</table>
+<p>完整代码见仓库 <code>harness/llm.py</code>（当前 tag <code>lesson-01</code>）。</p>
+<h2 id="五为什么这样设计">五、为什么这样设计</h2>
+<ul>
+<li><strong>薄封装，不藏业务</strong>：<code>LLMClient</code> 只做&quot;消息 → 文本&quot;，不做业务判断。业务逻辑留在上层，harness 保持可复用。</li>
+<li><strong>不用 SDK，用 requests</strong>：SDK 帮你省了 20 行，但把错误处理、重试、参数都变成黑盒。这个系列的目标是看懂每一层，所以先裸写。</li>
+<li><strong>错误要可分类</strong>：<code>retryable</code> 标记让调用方知道&quot;重试有用吗&quot;——网络抖动重试有用，key 错了重试一万次也没用。</li>
+<li><strong>为演进留接口</strong>：<code>chat(messages)</code> 这个签名，下一篇加多轮对话时不需要改调用方。</li>
+</ul>
+<h2 id="六小结">六、小结</h2>
+<p>本篇的收获：</p>
+<ol>
+<li>模型调用不是&quot;发个请求&quot;，而是一堆工程细节：配置、超时、重试、错误分类。</li>
+<li>harness 的第一层，是把这些细节封装成可靠组件，让业务代码只关心输入输出。</li>
+<li>设计上保持薄封装 + 错误可分类 + 可测试，为后面的演进打底。</li>
+</ol>
+<p>配套仓库当前在 <code>lesson-01</code> tag，代码见 <code>harness/llm.py</code>。</p>
+<p>下一篇，我们让模型&quot;记住&quot;对话：<strong>多轮对话与上下文管理</strong>——你会发现，上下文不是把消息都塞进去那么简单。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>系统架构设计方法论（三）：技术选型与决策 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一选型前置回到需求">一、选型前置：回到需求</a></li>
+    <li><a href="#二评估维度">二、评估维度</a></li>
+    <li><a href="#三决策框架从对比矩阵到-poc">三、决策框架：从对比矩阵到 POC</a>
+      <ul>
+        <li><a href="#31-对比矩阵">3.1 对比矩阵</a></li>
+        <li><a href="#32-poc-验证">3.2 POC 验证</a></li>
+        <li><a href="#33-决策记录">3.3 决策记录</a></li>
+      </ul>
+    </li>
+    <li><a href="#四自研-vs-开源-vs-商业">四、自研 vs 开源 vs 商业</a></li>
+    <li><a href="#五权衡取舍">五、权衡取舍</a></li>
+    <li><a href="#六落地案例">六、落地案例</a></li>
+    <li><a href="#七面试考察点与自查清单">七、面试考察点与自查清单</a></li>
+    <li><a href="#相关阅读">相关阅读</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">系统架构设计方法论（三）：技术选型与决策</h1>
+        </header>
+
+        <div class="page-content">
+            <h2 id="前言">前言</h2>
+<p>技术选型是最容易被低估的架构决策。很多系统不是被业务难死的，而是被选型拖死的：选了个&quot;很潮&quot;但不成熟的技术，踩坑三个月；或者&quot;大家都在用&quot;所以跟着选，业务形态根本对不上。</p>
+<p>选型的本质是<strong>用可验证的证据做决策</strong>，而不是凭感觉。本文给出一套可复用的选型方法论：前置条件、评估维度、决策框架和落地案例。</p>
+<blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%B8%80%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E8%BE%B9%E7%95%8C%E5%88%92%E5%88%86/">需求分析与边界划分</a></li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%8C%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B8%8E%E5%88%86%E5%B1%82/">模块化与分层</a></li>
+<li>本文：技术选型与决策</li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E5%9B%9B%E6%80%A7%E8%83%BD%E5%8F%AF%E7%94%A8%E6%80%A7%E4%B8%8E%E6%89%A9%E5%B1%95%E6%80%A7/">性能、可用性与扩展性</a></li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%94%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B%E4%B8%8E%E6%B2%BB%E7%90%86/">架构演进与治理</a></li>
+</ul>
+</blockquote>
+<h2 id="一选型前置回到需求">一、选型前置：回到需求</h2>
+<p>选型前先回答三个问题，答案不在技术而在业务：</p>
+<ol>
+<li><strong>问题是什么</strong>——要解决的是存储、通信、计算还是检索问题</li>
+<li><strong>约束是什么</strong>——团队熟悉度、成本、合规、运维能力</li>
+<li><strong>规模与演进预期</strong>——3 年后数据量、QPS、团队规模</li>
+</ol>
+<p>这三个问题（对应系列第一篇的需求与边界）没想清楚，对比矩阵就是空中楼阁。</p>
+<h2 id="二评估维度">二、评估维度</h2>
+<p>候选技术放到统一的维度下评估：</p>
+<table>
+	<thead>
+			<tr>
+					<th>维度</th>
+					<th>关注点</th>
+					<th>反面教材</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>成熟度</td>
+					<td>版本历史、大规模落地案例</td>
+					<td>选 0.x 版本上生产</td>
+			</tr>
+			<tr>
+					<td>社区与生态</td>
+					<td>文档、Issue 响应、周边工具</td>
+					<td>出问题没人问</td>
+			</tr>
+			<tr>
+					<td>性能</td>
+					<td>基准测试是否满足指标</td>
+					<td>压测都没做就定</td>
+			</tr>
+			<tr>
+					<td>运维成本</td>
+					<td>部署、监控、排障的复杂度</td>
+					<td>上线后没人会运维</td>
+			</tr>
+			<tr>
+					<td>团队熟悉度</td>
+					<td>学习曲线、招聘难度</td>
+					<td>全组没人写过</td>
+			</tr>
+			<tr>
+					<td>演进性</td>
+					<td>版本升级、API 稳定性</td>
+					<td>升级一次伤筋动骨</td>
+			</tr>
+			<tr>
+					<td>许可证与合规</td>
+					<td>开源协议、数据合规</td>
+					<td>用了禁止商用协议</td>
+			</tr>
+	</tbody>
+</table>
+<p>评估不是简单求和，而是<strong>先设否决项，再谈加权</strong>：任何一项踩到硬约束（比如许可证不允许商用），一票否决。</p>
+<h2 id="三决策框架从对比矩阵到-poc">三、决策框架：从对比矩阵到 POC</h2>
+<h3 id="31-对比矩阵">3.1 对比矩阵</h3>
+<p>矩阵列出候选方案 × 评估维度，每格给证据（文档链接、压测数据、社区讨论），而不是拍脑袋打分。</p>
+<table>
+	<thead>
+			<tr>
+					<th>维度</th>
+					<th>候选 A（Kafka）</th>
+					<th>候选 B（RabbitMQ）</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>吞吐</td>
+					<td>百万级/s（官方基准）</td>
+					<td>万级/s</td>
+			</tr>
+			<tr>
+					<td>消息模型</td>
+					<td>分区日志</td>
+					<td>队列/路由</td>
+			</tr>
+			<tr>
+					<td>延迟</td>
+					<td>毫秒级（批量优化前）</td>
+					<td>微秒~毫秒级</td>
+			</tr>
+			<tr>
+					<td>运维</td>
+					<td>需要管理分区、副本</td>
+					<td>轻量，管理简单</td>
+			</tr>
+			<tr>
+					<td>生态</td>
+					<td>大数据生态标配</td>
+					<td>Spring 生态友好</td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="32-poc-验证">3.2 POC 验证</h3>
+<p>对关键指标做最小成本的概念验证，验证点要提前写死：</p>
+<pre><code>POC 验证单（例：消息中间件）：
+1. 峰值 5000 QPS 下单链路，端到端延迟 TP99 &lt; 500ms
+2. 消费者宕机 10 分钟，消息不丢、恢复后积压追平
+3. 集群 3 节点挂 1 节点，服务不中断
+4. 团队 2 人一周内能完成核心功能
+</code></pre>
+<p>POC 通过率比任何专家意见都可信。</p>
+<h3 id="33-决策记录">3.3 决策记录</h3>
+<p>选定后写 ADR（架构决策记录），把<strong>背景、候选、评估、决定、后果</strong>记下来。这个习惯会在系列第五篇（演进与治理）里继续展开。</p>
+<h2 id="四自研-vs-开源-vs-商业">四、自研 vs 开源 vs 商业</h2>
+<table>
+	<thead>
+			<tr>
+					<th>选项</th>
+					<th>适用场景</th>
+					<th>风险</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>开源</td>
+					<td>需求通用、社区活跃</td>
+					<td>版本升级、维护责任</td>
+			</tr>
+			<tr>
+					<td>商业</td>
+					<td>核心业务、要支持与 SLA</td>
+					<td>成本、锁定</td>
+			</tr>
+			<tr>
+					<td>自研</td>
+					<td>开源满足不了、构成核心竞争力</td>
+					<td>长期维护成本最高</td>
+			</tr>
+	</tbody>
+</table>
+<p>自研要极其克制：一个内部组件一旦开源能满足，就失去自研理由。反过来，如果这个组件是业务护城河（比如支付的风控规则引擎），自研反而合理。</p>
+<h2 id="五权衡取舍">五、权衡取舍</h2>
+<ul>
+<li><strong>新 vs 稳</strong>：新技术带来的红利 vs 踩坑成本。生产环境遵循&quot;稳定 &gt; 性能 &gt; 功能&quot;</li>
+<li><strong>性能 vs 运维复杂度</strong>：极致性能往往意味着更复杂的运维（如自建 ES 集群 vs 托管版）</li>
+<li><strong>绑定 vs 解耦</strong>：选型要评估迁移成本，但也不必为&quot;万一换&quot;过度抽象，抽象本身也是成本</li>
+</ul>
+<h2 id="六落地案例">六、落地案例</h2>
+<p>博客系列里已经有大量选型案例可以对照：</p>
+<ul>
+<li><strong>注册中心/配置中心</strong>：<a href="/posts/nacos-%E7%BB%BC%E5%90%88%E5%AE%9E%E6%88%98%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83--%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E4%B8%80%E4%BD%93%E5%8C%96/">Nacos 综合实战</a>说明了为什么选 Nacos 而非 Eureka——配置中心一体化、AP 模型适合服务发现</li>
+<li><strong>消息队列</strong>：Kafka vs RabbitMQ 的选择要看吞吐与模型：<a href="/posts/kafka%E4%B8%80%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E4%B8%8E%E6%9E%B6%E6%9E%84/">Kafka 核心架构</a> vs <a href="/posts/rabbitmq%E4%B8%80%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E4%B8%8E%E6%9E%B6%E6%9E%84/">RabbitMQ 核心架构</a></li>
+<li><strong>搜索引擎</strong>：<a href="/posts/elasticsearch%E4%B8%80%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E4%B8%8E%E6%9E%B6%E6%9E%84/">ES 核心架构</a>展示了倒排索引的适用边界——全文检索、聚合分析，而不是所有查询</li>
+<li><strong>工作流引擎</strong>：<a href="/posts/%E5%B7%A5%E4%BD%9C%E6%B5%81%E4%B8%80%E9%80%89%E5%9E%8B%E4%B8%8E-flowable-%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5/">工作流选型与 Flowable 核心概念</a>是一篇典型的&quot;需求 → 候选 → 决策&quot;选型文</li>
+<li><strong>技术栈组合</strong>：<a href="/posts/java-webgis-%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97%E4%B8%80%E6%A6%82%E8%BF%B0%E4%B8%8E%E6%8A%80%E6%9C%AF%E6%A0%88%E9%80%89%E5%9E%8B/">WebGIS 概述与技术栈选型</a>从空间数据业务出发推导整套技术栈</li>
+</ul>
+<p>每个案例的共通点：先定义问题和约束，再评估，再验证，最后记录决策。</p>
+<h2 id="七面试考察点与自查清单">七、面试考察点与自查清单</h2>
+<p><strong>高频面试题：</strong></p>
+<ol>
+<li>&ldquo;为什么选 Redis 而不是 Memcached？&quot;——从数据结构、持久化、集群、业务需求角度答，而不是背结论</li>
+<li>&ldquo;怎么组织选型报告？&quot;——问题 → 候选 → 维度 → 证据 → 决定</li>
+<li>&ldquo;开源自研怎么选？&quot;——通用问题用开源，核心壁垒才自研</li>
+<li>&ldquo;技术选型最大的坑？&quot;——跳过 POC、被情绪带节奏、忽略运维成本</li>
+</ol>
+<p><strong>自查清单：</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> 每次选型有对比矩阵和证据</li>
+<li><input disabled="" type="checkbox"> 关键指标做过 POC 验证</li>
+<li><input disabled="" type="checkbox"> 选型结果有 ADR 记录</li>
+<li><input disabled="" type="checkbox"> 能说清&quot;不选另一个方案&quot;的原因</li>
+</ul>
+<h2 id="相关阅读">相关阅读</h2>
+<ul>
+<li><a href="/posts/nacos-%E7%BB%BC%E5%90%88%E5%AE%9E%E6%88%98%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83--%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E4%B8%80%E4%BD%93%E5%8C%96/">Nacos 综合实战：注册中心 + 配置中心一体化</a></li>
+<li><a href="/posts/kafka%E4%B8%80%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E4%B8%8E%E6%9E%B6%E6%9E%84/">Kafka（一）：核心概念与架构</a></li>
+<li><a href="/posts/rabbitmq%E4%B8%80%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E4%B8%8E%E6%9E%B6%E6%9E%84/">RabbitMQ（一）：核心架构</a></li>
+<li><a href="/posts/elasticsearch%E4%B8%80%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E4%B8%8E%E6%9E%B6%E6%9E%84/">Elasticsearch（一）：核心架构</a></li>
+<li><a href="/posts/%E5%B7%A5%E4%BD%9C%E6%B5%81%E4%B8%80%E9%80%89%E5%9E%8B%E4%B8%8E-flowable-%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5/">工作流（一）：选型与 Flowable 核心概念</a></li>
+<li>上一篇：<a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%8C%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B8%8E%E5%88%86%E5%B1%82/">模块化与分层</a></li>
+<li>下一篇：<a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E5%9B%9B%E6%80%A7%E8%83%BD%E5%8F%AF%E7%94%A8%E6%80%A7%E4%B8%8E%E6%89%A9%E5%B1%95%E6%80%A7/">性能、可用性与扩展性</a></li>
+</ul>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

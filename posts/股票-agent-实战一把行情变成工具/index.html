@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>股票 Agent 实战（一）：把行情变成工具 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一场景让-agent-回答贵州茅台现在什么价位">一、场景：让 agent 回答「贵州茅台现在什么价位」</a></li>
+    <li><a href="#二工程化演进数据源层--工具层">二、工程化演进：数据源层 + 工具层</a></li>
+    <li><a href="#三真实踩坑ua-断连与接口抖动">三、真实踩坑：UA 断连与接口抖动</a></li>
+    <li><a href="#四运行与验证">四、运行与验证</a></li>
+    <li><a href="#五小结">五、小结</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">股票 Agent 实战（一）：把行情变成工具</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li>本文：股票 Agent 实战（一）：把行情变成工具</li>
+<li>下一篇：财报解读（写作中）</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>📚 <strong>推荐阅读（前置知识）</strong></p>
+<ul>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%80%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-harness/">AI Harness 实战（一）：为什么需要 harness</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%89%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E5%BE%AA%E7%8E%AF/">AI Harness 实战（三）：工具调用循环</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%83%E5%A6%82%E4%BD%95%E8%AF%84%E6%B5%8B%E8%BF%99%E4%B8%AA-harness/">AI Harness 实战（七）：如何评测这个 harness</a></li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p><code>ai-harness</code> 系列从零搭了一个完整的 agent 运行时：模型封装、会话、工具循环、结构化输出、沙箱、可观测、评测。但那个 harness 是个<strong>空壳</strong>——它没有任何真实能力。</p>
+<p>这个新系列要做的，是给空壳装上真实能力：一个 <strong>A 股股票 agent</strong>，从个股问答出发，逐步扩展到分析助手、盯盘提醒、财报解读、舆情监控。每篇仍然像 harness 系列一样，一篇文章加一个功能，每个功能背后是一个真实的工程问题。</p>
+<p>配套代码在 <code>ai-harness-tutorial</code> 仓库的 <code>stock-agent/</code> 目录，直接复用仓库根目录的 <code>harness</code> 包，不重复造轮子。</p>
+<h2 id="一场景让-agent-回答贵州茅台现在什么价位">一、场景：让 agent 回答「贵州茅台现在什么价位」</h2>
+<p>目标很简单：用户问一句「贵州茅台现在什么价位」，agent 查到真实行情并回答。</p>
+<p>最朴素的做法，是把 AkShare 直接暴露给模型：</p>
+<pre><code class="language-python">import akshare as ak
+df = ak.stock_bid_ask_em(symbol=&quot;600519&quot;)
+</code></pre>
+<p>能跑。但把这样的数据接口直接塞给模型，有三个问题：</p>
+<ul>
+<li><strong>接口名是黑话</strong>：<code>stock_bid_ask_em</code> 是什么？模型只能靠猜；</li>
+<li><strong>返回结构不稳定</strong>：接口返回中文列名的表格，字段含义模型不知道，接口还经常改版，改一次 agent 就瞎一次；</li>
+<li><strong>没有参数约束</strong>：模型可能传一个不存在的代码、问一个接口不支持的参数。</li>
+</ul>
+<h2 id="二工程化演进数据源层--工具层">二、工程化演进：数据源层 + 工具层</h2>
+<p>解决方案在 harness 第 3 课就写过：把函数包装成 <code>Tool</code>——名字、说明书（description）、参数 Schema、执行函数。今天只是换一批函数。</p>
+<pre><code class="language-python">@tool(
+    name=&quot;get_realtime_quote&quot;,
+    description=&quot;获取 A 股个股的实时盘口行情，包括最新价、涨跌幅、成交量、量比、五档买卖等。&quot;,
+    parameters={
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+            &quot;symbol&quot;: {
+                &quot;type&quot;: &quot;string&quot;,
+                &quot;description&quot;: &quot;6 位 A 股股票代码，例如 '600519' 是贵州茅台&quot;,
+            }
+        },
+        &quot;required&quot;: [&quot;symbol&quot;],
+    },
+)
+def get_realtime_quote(symbol: str) -&gt; dict:
+    return data_source.realtime_quote(symbol)
+</code></pre>
+<p>注意 <code>description</code> 里写了「600519 是贵州茅台」——这是模型把「贵州茅台」翻译成代码的唯一依据。<strong>说明书质量，直接决定 agent 智商。</strong></p>
+<p>第一课只做两个工具：</p>
+<table>
+	<thead>
+			<tr>
+					<th>工具</th>
+					<th>作用</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>get_realtime_quote(symbol)</code></td>
+					<td>实时盘口：最新价、涨跌幅、量比、五档等</td>
+			</tr>
+			<tr>
+					<td><code>get_daily_history(symbol, days)</code></td>
+					<td>近 N 个交易日日 K（前复权），用于分析走势</td>
+			</tr>
+	</tbody>
+</table>
+<p>工具之下还有一层<strong>数据源层</strong>（<code>stock/data_source.py</code>），它比「调个接口」多做了两件事：</p>
+<ul>
+<li><strong>缓存</strong>：agent 的工具循环可能在几秒内反复查同一只股票，TTL 缓存 10 秒，避免把数据源打到限流；</li>
+<li><strong>归一化</strong>：把原始接口的中文列名、混杂类型统一成稳定的 JSON，模型读起来不晕。</li>
+</ul>
+<p>以后想换 tushare、换券商接口，只改数据源层，工具和 agent 都不用动——这就是分层。</p>
+<h2 id="三真实踩坑ua-断连与接口抖动">三、真实踩坑：UA 断连与接口抖动</h2>
+<p>写代码永远比预想的多两个坑。第一版用 AkShare 的盘口接口，真实运行时直接被行情服务器断开连接：</p>
+<pre><code class="language-text">RemoteDisconnected: Remote end closed connection without response
+</code></pre>
+<p>排查发现：<code>stock_bid_ask_em</code> 的请求<strong>不带浏览器标识（UA）</strong>，部分网络环境下会被东方财富服务器直接掐断。修复方式是数据源层直连东方财富 HTTP 接口并带上浏览器 UA。</p>
+<p>然后第二个坑来了：带 UA 之后接口依然<strong>偶发抖动</strong>——一会儿 <code>ProxyError</code>，一会儿连接重置。实测 4 次里有 1 次失败。于是再加两道保险：</p>
+<ol>
+<li><strong>重试</strong>：主通道失败时指数退避重试 3 次；</li>
+<li><strong>降级</strong>：主通道彻底失败时，自动切到腾讯行情接口兜底。</li>
+</ol>
+<pre><code class="language-python">def _fetch_realtime(symbol: str) -&gt; dict:
+    try:
+        return _fetch_realtime_em(symbol)        # 主通道：东方财富
+    except RuntimeError:
+        return _fetch_realtime_tencent(symbol)   # 备用通道：腾讯
+</code></pre>
+<p>这两个坑正好说明「数据源层」为什么值得单独存在：<strong>数据源不稳定是常态，agent 的可靠性必须从数据源层开始加固。</strong></p>
+<h2 id="四运行与验证">四、运行与验证</h2>
+<p>用 conda 建项目同名环境（不污染全局环境）：</p>
+<pre><code class="language-bash">conda create -n stock-agent python=3.12 -y   # 首次创建环境
+conda activate stock-agent                    # 切换 conda 环境
+pip install -r stock-agent/requirements.txt
+# 复制 stock-agent/.env.example 为 stock-agent/.env，填入 DEEPSEEK_API_KEY
+
+# 真实模式（联网，走 DeepSeek + 东方财富/腾讯行情）
+python stock-agent/main.py &quot;贵州茅台现在什么价位&quot;
+
+# 离线模式（FakeLLM，不联网不花钱，验证整条链路）
+python stock-agent/main.py --fake &quot;贵州茅台现在什么价位&quot;
+
+# 离线测试
+python -m unittest discover -s stock-agent/tests -v
+</code></pre>
+<p>真实问答输出示例：</p>
+<pre><code class="language-text">贵州茅台（600519）当前行情如下：
+
+- 最新价：1346.01 元
+- 涨跌幅：-0.21%（跌 2.85 元）
+- 今开：1348.00 元，最高 / 最低：1352.65 / 1338.18 元
+- 成交额：约 12.23 亿元，换手率 0.07%，量比 1.15
+
+今日小幅低开后窄幅震荡，整体波动不大。
+</code></pre>
+<p>离线测试覆盖四类行为：盘口归一化、K 线结构、工具 Schema、缓存命中；外加一个「主通道挂了自动降级」的用例。</p>
+<h2 id="五小结">五、小结</h2>
+<p>第一课的收获：</p>
+<ol>
+<li><strong>模型看不见数据，只看得见工具</strong>——给 agent 的是带说明书的函数，不是数据源；</li>
+<li><strong>数据源层独立存在</strong>——缓存、归一化、重试、降级都在这一层，换实现不动上层；</li>
+<li><strong>真实数据源会抖</strong>——UA 断连、连接重置都是生产常态，重试 + 双通道降级是标配；</li>
+<li><strong>错误要变成模型能读的文本</strong>——工具出错返回错误信息而不是抛异常，agent 才能自我修正（harness 第 3 课的设计在这里被真实场景验证了）。</li>
+</ol>
+<p>下一步：<strong>财报解读</strong>——把基本面数据变成工具，并开始用结构化输出约束分析结论。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

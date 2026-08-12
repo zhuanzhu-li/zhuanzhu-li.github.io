@@ -12,14 +12,21 @@
 			<copyright>Liwenqi</copyright>
 		
 		
-			<lastBuildDate>Tue, 23 Jun 2026 00:00:00 +0000</lastBuildDate>
+			<lastBuildDate>Tue, 11 Aug 2026 00:00:00 +0000</lastBuildDate>
 		
 			<atom:link href="https://liwenqikeep.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
 			<item>
 				<title>AI</title>
 				<link>https://liwenqikeep.github.io/categories/ai/</link>
-				<pubDate>Tue, 23 Jun 2026 00:00:00 +0000</pubDate>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
 				<guid>https://liwenqikeep.github.io/categories/ai/</guid>
+				<description></description>
+			</item>
+			<item>
+				<title>架构设计</title>
+				<link>https://liwenqikeep.github.io/categories/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/</link>
+				<pubDate>Wed, 18 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/categories/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/</guid>
 				<description></description>
 			</item>
 			<item>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>股票 Agent 实战（七）：预测 vs 实际——无框架按天可视化 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一先定义对错的口径">一、先定义「对错」的口径</a></li>
+    <li><a href="#二又踩一个数据源的坑日-k-也得上双通道">二、又踩一个数据源的坑：日 K 也得上双通道</a></li>
+    <li><a href="#三手写-svg不引框架">三、手写 SVG，不引框架</a></li>
+    <li><a href="#四运行与验证">四、运行与验证</a></li>
+    <li><a href="#五小结">五、小结</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">股票 Agent 实战（七）：预测 vs 实际——无框架按天可视化</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/">股票 Agent 实战（一）：把行情变成工具</a></li>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%8C%E8%B4%A2%E6%8A%A5%E8%A7%A3%E8%AF%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA/">股票 Agent 实战（二）：财报解读与结构化输出</a></li>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%89%E7%9B%AF%E7%9B%98%E6%8F%90%E9%86%92%E4%BB%8E%E8%A2%AB%E5%8A%A8%E9%97%AE%E7%AD%94%E5%88%B0%E4%B8%BB%E5%8A%A8%E7%9B%91%E6%8E%A7/">股票 Agent 实战（三）：盯盘提醒</a></li>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E5%9B%9B%E8%88%86%E6%83%85%E7%9B%91%E6%8E%A7%E8%AE%A9-agent-%E7%9F%A5%E9%81%93%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B6%A8%E8%B7%8C/">股票 Agent 实战（四）：舆情监控</a></li>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%94%E5%A4%9A-agent-%E5%8D%8F%E4%BD%9C%E4%B8%8E%E5%90%91%E9%87%8F%E8%AE%B0%E5%BF%86/">股票 Agent 实战（五）：多 Agent 协作与向量记忆</a></li>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E5%85%AD%E9%A2%84%E6%B5%8B%E7%BB%93%E6%9E%9C%E5%AD%98%E5%82%A8%E5%9B%BA%E5%AE%9A%E7%BB%93%E6%9E%84--%E5%8F%AF%E6%9F%A5%E8%AF%A2/">股票 Agent 实战（六）：预测结果存储</a></li>
+<li>本文：股票 Agent 实战（七）：预测 vs 实际——无框架按天可视化</li>
+<li>下一篇：按后续规划另行展开</li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p>第六课把预测存进了固定结构的预测库。存了不看，等于白存。这一课把它<strong>画出来</strong>：每天一条预测，旁边就是次一交易日的实际涨跌，一眼看出「看多对不对、看空准不准」。</p>
+<p>按你的要求，<strong>不引任何图表框架</strong>：纯标准库生成一个自包含 HTML，图表用手写 SVG 柱状图。</p>
+<h2 id="一先定义对错的口径">一、先定义「对错」的口径</h2>
+<p>没有口径就没有准确率：</p>
+<ul>
+<li><strong>预测日 D</strong>：预测记录落库的日期（UTC 转北京时间按天归组）；</li>
+<li><strong>实际结果</strong>：D 之后第一个交易日的收盘相对 D（或 D 当日）收盘的涨跌幅；</li>
+<li><strong>判定</strong>：看多 → 次日涨为对；看空 → 次日跌为对；中性 → 不计入方向准确率；</li>
+<li><strong>待验证</strong>：还没有后续交易日数据的预测（比如今天刚下的），单独标记。</li>
+</ul>
+<p>这些判定逻辑全部是纯函数（<code>compute_outcomes</code>），离线测试覆盖：看多对、看空对、中性不计、无后续数据标待验证、准确率汇总。</p>
+<h2 id="二又踩一个数据源的坑日-k-也得上双通道">二、又踩一个数据源的坑：日 K 也得上双通道</h2>
+<p>画图需要真实日 K。第一版用 AkShare 的 <code>stock_zh_a_hist</code>，被服务器反复断开；改成直连东方财富 K 线接口（带 UA）后仍然断——这次不是 UA 问题，是 <code>push2his.eastmoney.com</code> 这个域名当前从本网络根本连不通（盘口域名却正常）。</p>
+<p>解法还是老配方：<strong>双通道</strong>。东方财富主、腾讯备（<code>web.ifzq.gtimg.cn</code> 实测正常），主通道挂了自动降级，工具层和报告层无感：</p>
+<pre><code class="language-python">def _fetch_daily_http(symbol, days):
+    try:
+        return _fetch_daily_em(symbol, days)        # 主：东方财富
+    except Exception:
+        return _fetch_daily_tencent(symbol, days)   # 备：腾讯
+</code></pre>
+<p>数据源层第三次证明自己的价值：库坏、断连、域名被掐，上层一行都不用改。</p>
+<h2 id="三手写-svg不引框架">三、手写 SVG，不引框架</h2>
+<p>报告是一个自包含 HTML：内联 CSS + 手写 SVG。每根柱子 = 一个预测日：</p>
+<ul>
+<li><strong>颜色</strong> = 预测方向（绿=看多，红=看空，灰=中性）；</li>
+<li><strong>高度</strong> = 实际次日涨跌幅（0 轴上下）；</li>
+<li><strong>柱顶标注</strong> = 实际涨跌% + ✓/✗（对/错）；</li>
+<li>待验证的预测画灰色小横条；</li>
+<li>下方表格给出每日明细（日期、代码、预测、实际涨跌、判定、结论摘要）。</li>
+</ul>
+<pre><code class="language-python">def _render_svg(rows):
+    # 坐标换算：0 轴居中，y = 中点 - (value / scale) * 半高
+    # 每根柱子：&lt;rect&gt; 填充预测方向色，柱顶 &lt;text&gt; 标注实际涨跌与对错
+</code></pre>
+<p>零依赖的好处：<code>prediction_report.html</code> 单文件，双击就能看，发给谁都能开。</p>
+<h2 id="四运行与验证">四、运行与验证</h2>
+<pre><code class="language-bash">conda activate stock-agent   # 每次开新终端先切换环境
+python stock-agent/report.py --days 60
+</code></pre>
+<blockquote>
+<p>Windows 提示：请先 <code>conda activate stock-agent</code> 再执行命令；不要用 <code>conda run</code>（会把输出重编码导致中文乱码）。</p>
+</blockquote>
+<p>真实输出（预测库里 1 条真实预测 + 4 条历史演示预测，来源 <code>demo</code> 标记）：</p>
+<pre><code class="language-text">报告已生成：stock-agent/prediction_report.html
+预测 5 条（已验证 3，待验证 1）
+方向准确率：33.3%
+</code></pre>
+<p>5 条里：3 条方向性预测（看多/看空）已验证、1 条今天待验证、1 条中性不计入；已验证 3 条中对了 1 条，准确率 33.3%。图表按天排列，每根柱子对应一个交易日。</p>
+<p>离线测试从 28 项增至 <strong>38 项</strong>（新增：时区按天归组、看多看空判定、中性不计、待验证标记、准确率汇总、渲染含图表与表格、日 K 双通道降级、重试、预测库显式时间/来源）。</p>
+<h2 id="五小结">五、小结</h2>
+<p>第七课的收获：</p>
+<ol>
+<li><strong>可视化之前先定口径</strong>——「对错」的定义决定准确率有没有意义；</li>
+<li><strong>无框架也能做出有用的图</strong>——手写 SVG 柱状图足够呈现按天对比，且零依赖、单文件；</li>
+<li><strong>数据源要双通道</strong>——域名级断连不是重试能救的，降级通道是标配；</li>
+<li><strong>预测库开始产生价值</strong>——准确率第一次变成数字，后面可以按符号、按置信度、按时间窗口拆开看。</li>
+</ol>
+<p>系列继续，下一篇按后续规划展开。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>股票 Agent 实战（三）：盯盘提醒——从被动问答到主动监控 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一场景条件触发提醒">一、场景：条件触发提醒</a></li>
+    <li><a href="#二实现纯函数规则引擎">二、实现：纯函数规则引擎</a></li>
+    <li><a href="#三通知通道抽象">三、通知通道抽象</a></li>
+    <li><a href="#四运行与验证">四、运行与验证</a></li>
+    <li><a href="#五小结">五、小结</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">股票 Agent 实战（三）：盯盘提醒——从被动问答到主动监控</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/">股票 Agent 实战（一）：把行情变成工具</a></li>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%8C%E8%B4%A2%E6%8A%A5%E8%A7%A3%E8%AF%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA/">股票 Agent 实战（二）：财报解读与结构化输出</a></li>
+<li>本文：股票 Agent 实战（三）：盯盘提醒——从被动问答到主动监控</li>
+<li>下一篇：舆情监控（写作中）</li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p>前两课的 agent 都是<strong>被动</strong>的：你问它才答。这一课把它变成<strong>主动</strong>的：不用问，条件触发了它自己来提醒你。</p>
+<p>这一课也顺便回答一个常见误区：<strong>不是所有环节都需要大模型</strong>。数值条件（跌破某个价、跌幅超过 3%）用规则引擎最可靠、最快、零成本、可评测。模型的价值在「解读」，不在「触发」。</p>
+<h2 id="一场景条件触发提醒">一、场景：条件触发提醒</h2>
+<p>盯盘要解决三件事：</p>
+<ol>
+<li><strong>条件评估</strong>：价格跌破 1400、跌幅超过 3%、涨幅超过 5%……这些是纯数值判断；</li>
+<li><strong>触发一次</strong>：价格在 1399 附近反复震荡，不能每分钟都发一条「跌破了」——要等条件先消失、再触发才算新一轮；</li>
+<li><strong>通道通知</strong>：提醒要送到人那里，控制台、企业微信、邮件、钉钉，通道可以换。</li>
+</ol>
+<h2 id="二实现纯函数规则引擎">二、实现：纯函数规则引擎</h2>
+<p>条件评估写成<strong>无副作用的纯函数</strong>，不碰网络、不碰 IO，因此可以离线测试、跑得飞快：</p>
+<pre><code class="language-python">@dataclass(frozen=True)
+class Condition:
+    type: str      # price_below / price_above / change_pct_below / change_pct_above
+    value: float
+
+    def hit(self, quote: dict) -&gt; bool:
+        price = _to_float(quote.get(&quot;最新价&quot;))
+        change = _to_float(quote.get(&quot;涨跌幅&quot;))
+        if self.type == &quot;price_below&quot;:
+            return price is not None and price &lt; self.value
+        if self.type == &quot;change_pct_below&quot;:
+            return change is not None and change &lt; self.value
+        ...
+</code></pre>
+<p>触发状态机是这节课的关键设计：<strong>命中且未触发 → 发提醒并置位；不再命中 → 复位</strong>。这样同一条件不会反复刷屏，价格回落再跌破又能重新提醒：</p>
+<pre><code class="language-python">for cond in item.conditions:
+    key = (item.symbol, cond.type, cond.value)
+    hit = cond.hit(quote)
+    if hit and not state.get(key, False):
+        state[key] = True
+        alerts.append(format_alert(name, item.symbol, cond, quote))
+    elif not hit:
+        state[key] = False
+</code></pre>
+<h2 id="三通知通道抽象">三、通知通道抽象</h2>
+<p>提醒内容与「送到哪里」解耦。默认控制台，配置了企业微信机器人 webhook 就走 webhook，邮件/钉钉以后照葫芦画瓢：</p>
+<pre><code class="language-python">class Notifier:
+    def send(self, message: str) -&gt; None: ...
+
+class ConsoleNotifier(Notifier):
+    def send(self, message: str) -&gt; None:
+        print(f&quot;[{datetime.now():%H:%M:%S}] {message}&quot;)
+
+class WebhookNotifier(Notifier):
+    def send(self, message: str) -&gt; None:
+        requests.post(self.url, json={&quot;msgtype&quot;: &quot;text&quot;, &quot;text&quot;: {&quot;content&quot;: message}})
+
+def build_notifier() -&gt; Notifier:
+    url = os.getenv(&quot;WECHAT_WEBHOOK_URL&quot;, &quot;&quot;).strip()
+    return WebhookNotifier(url) if url else ConsoleNotifier()
+</code></pre>
+<p>盯盘清单用 JSON 配置，改条件不用改代码：</p>
+<pre><code class="language-json">{
+  &quot;items&quot;: [
+    {
+      &quot;symbol&quot;: &quot;600519&quot;,
+      &quot;conditions&quot;: [
+        { &quot;type&quot;: &quot;price_below&quot;, &quot;value&quot;: 1400.0 },
+        { &quot;type&quot;: &quot;change_pct_below&quot;, &quot;value&quot;: -3.0 }
+      ]
+    }
+  ]
+}
+</code></pre>
+<h2 id="四运行与验证">四、运行与验证</h2>
+<pre><code class="language-bash"># 单轮检查（演示用）
+conda activate stock-agent   # 每次开新终端先切换环境
+python stock-agent/monitor.py --once
+
+# 持续轮询（默认 30 秒一次）
+python stock-agent/monitor.py --interval 30
+</code></pre>
+<p>真实触发输出：</p>
+<pre><code class="language-text">[10:38:52] [盯盘提醒] 贵州茅台(600519) 跌破 1400.0：现价 1342.99，涨跌幅 -0.44%
+</code></pre>
+<p>离线测试新增 6 项（条件命中/不命中、触发一次与回落复位、告警格式、清单解析、未知条件启动即报错），总数来到 <strong>13 项</strong>，全部不联网、不花钱。</p>
+<h2 id="五小结">五、小结</h2>
+<p>第三课的收获：</p>
+<ol>
+<li><strong>agent 化不等于全部用 LLM</strong>——数值规则用纯函数，可靠、可测、零成本；</li>
+<li><strong>触发状态机</strong>——「命中置位、回落复位」避免重复轰炸，这是监控系统的通用设计；</li>
+<li><strong>通道抽象</strong>——提醒内容与通知方式解耦，控制台/企业微信/邮件/钉钉可插拔；</li>
+<li><strong>fail fast</strong>——未知条件在启动时报错，而不是在盘中悄悄失效。</li>
+</ol>
+<p>下一步：<strong>舆情监控</strong>——把新闻/情绪数据变成信号，让 agent 对「为什么涨跌」也有判断依据。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

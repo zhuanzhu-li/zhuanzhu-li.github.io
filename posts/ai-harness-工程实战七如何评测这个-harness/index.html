@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>AI Harness 工程实战（七）：如何评测这个 harness - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一场景凭感觉改代码">一、场景：凭感觉改代码</a></li>
+    <li><a href="#二朴素实现手动点几个例子">二、朴素实现：手动点几个例子</a></li>
+    <li><a href="#三它暴露了哪些问题">三、它暴露了哪些问题</a></li>
+    <li><a href="#四工程化演进fakellm--eval-集--指标">四、工程化演进：FakeLLM + eval 集 + 指标</a>
+      <ul>
+        <li><a href="#1-fakellm把模型换成脚本">1. FakeLLM：把模型换成脚本</a></li>
+        <li><a href="#2-eval-集与指标">2. eval 集与指标</a></li>
+        <li><a href="#3-单元测试把前六篇的能力全部钉住">3. 单元测试：把前六篇的能力全部钉住</a></li>
+        <li><a href="#4-真实评测的注意点">4. 真实评测的注意点</a></li>
+      </ul>
+    </li>
+    <li><a href="#五为什么这样设计">五、为什么这样设计</a></li>
+    <li><a href="#六小结七篇的完整闭环">六、小结：七篇的完整闭环</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">AI Harness 工程实战（七）：如何评测这个 harness</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%80%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-harness/">AI Harness 工程实战（一）：为什么需要 harness</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%BA%8C%E5%A4%9A%E8%BD%AE%E5%AF%B9%E8%AF%9D%E4%B8%8E%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AE%A1%E7%90%86/">AI Harness 工程实战（二）：多轮对话与上下文管理</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%89%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E5%BE%AA%E7%8E%AF/">AI Harness 工程实战（三）：工具调用循环</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%9B%9B%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E4%B8%8E%E9%87%8D%E8%AF%95/">AI Harness 工程实战（四）：结构化输出与重试</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%BA%94%E6%9D%83%E9%99%90%E4%B8%8E%E6%B2%99%E7%AE%B1/">AI Harness 工程实战（五）：权限与沙箱</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%85%AD%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/">AI Harness 工程实战（六）：可观测性</a></li>
+<li>本文：AI Harness 工程实战（七）：如何评测这个 harness</li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p>前六篇，我们搭出了一个完整的 harness：模型封装、会话、上下文、工具循环、结构化输出、沙箱、可观测性。但还有一个终极问题没回答：<strong>改一行代码，怎么知道 agent 变好了还是变差了？</strong></p>
+<p>&ldquo;感觉变聪明了&quot;不算数。这一篇给 harness 装上最后一环：<strong>评测</strong>——fake LLM、eval 集、客观指标。这也是系列的收尾：七篇下来，一个从零手搭的 harness 完整闭环了。</p>
+<h2 id="一场景凭感觉改代码">一、场景：凭感觉改代码</h2>
+<p>你在第二篇把截断策略从&quot;窗口&quot;改成&quot;摘要&rdquo;，在第四篇把重试次数从 3 改成 5。怎么看效果？</p>
+<ul>
+<li>手动点几个例子？今天感觉好，明天感觉差，随机性让你永远分不清是改好了还是改坏了。</li>
+<li>直接上真实 API 跑？每轮评测都要花钱、要等、还会因为模型随机性抖动。</li>
+</ul>
+<p>评测要解决的就是这三个问题：<strong>客观、可复现、低成本</strong>。</p>
+<h2 id="二朴素实现手动点几个例子">二、朴素实现：手动点几个例子</h2>
+<pre><code class="language-python">print(agent.run(&quot;北京天气怎么样？&quot;))   # 看一眼，感觉还行
+print(agent.run(&quot;1+2 等于几？&quot;))       # 嗯，这个也差不多
+</code></pre>
+<p>两个用例、一双肉眼、一个&quot;感觉&quot;。这不是评测，这是许愿。</p>
+<h2 id="三它暴露了哪些问题">三、它暴露了哪些问题</h2>
+<ul>
+<li><strong>没有客观指标</strong>：通过/失败全靠人判断，同一个回答今天算过、明天算不过。</li>
+<li><strong>样例覆盖不足</strong>：两三个手工用例发现不了回归——上下文截断坏了、工具权限放宽了，都测不出来。</li>
+<li><strong>随机性干扰</strong>：真实模型输出不稳定，两次跑同一套用例结果不一样，无法定位是代码问题还是模型抖动。</li>
+<li><strong>成本不可控</strong>：每次评测都调真实 API，改动频繁时账单先崩溃。</li>
+</ul>
+<h2 id="四工程化演进fakellm--eval-集--指标">四、工程化演进：FakeLLM + eval 集 + 指标</h2>
+<h3 id="1-fakellm把模型换成脚本">1. FakeLLM：把模型换成脚本</h3>
+<p>核心思路：<strong>评测 harness 逻辑时，不依赖真实模型</strong>。<code>FakeLLM</code> 按脚本顺序返回预设响应：</p>
+<pre><code class="language-python">llm = FakeLLM([
+    {&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: None, &quot;tool_calls&quot;: [...]},  # 第一轮：调工具
+    {&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: &quot;结果是 3&quot;},                  # 第二轮：回答
+])
+</code></pre>
+<p>没有随机性、不花钱、毫秒级跑完。它能测的是 harness 的<strong>逻辑</strong>：循环是否收敛、工具是否执行、权限是否拦截、上下文是否裁剪、成本是否统计。真实模型的质量评测，再把 <code>FakeLLM</code> 换成 <code>LLMClient()</code> 就行——框架不变。</p>
+<h3 id="2-eval-集与指标">2. eval 集与指标</h3>
+<p><code>EvalCase</code> 定义一个测试任务（输入 + 期望），<code>run_eval</code> 批量跑并产出指标：</p>
+<pre><code class="language-python">cases = [
+    EvalCase(&quot;北京天气&quot;, &quot;北京天气怎么样？&quot;, [&quot;28&quot;]),
+    EvalCase(&quot;上海天气&quot;, &quot;上海天气呢？&quot;, [&quot;多云&quot;]),
+]
+report = run_eval(build_agent, cases)
+</code></pre>
+<pre><code class="language-text">成功率：1.0（3/3）
+平均步数：2.0，总成本：$0.0
+  [PASS] 北京天气 -&gt; 北京天气：晴，28°C
+</code></pre>
+<p>三个指标分别回答三个问题：<strong>成功率</strong>（功能对不对）、<strong>平均步数</strong>（效率高不高，绕圈子会体现）、<strong>总成本</strong>（贵不贵，接上第六篇的 Telemetry 自动累计）。</p>
+<h3 id="3-单元测试把前六篇的能力全部钉住">3. 单元测试：把前六篇的能力全部钉住</h3>
+<p>评测面向 agent 行为，单元测试面向 harness 组件。仓库的 <code>tests/</code> 里现在有 21 个测试，覆盖前六篇的每个模块：</p>
+<table>
+	<thead>
+			<tr>
+					<th>测试文件</th>
+					<th>覆盖</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>test_context.py</code></td>
+					<td>token 估算、窗口截断、摘要压缩</td>
+			</tr>
+			<tr>
+					<td><code>test_output.py</code></td>
+					<td>JSON 解析、Schema 校验、内容重试</td>
+			</tr>
+			<tr>
+					<td><code>test_retry.py</code></td>
+					<td>指数退避、重试耗尽</td>
+			</tr>
+			<tr>
+					<td><code>test_sandbox.py</code></td>
+					<td>路径穿越、命令白名单、越界读</td>
+			</tr>
+			<tr>
+					<td><code>test_eval.py</code></td>
+					<td>FakeLLM、eval 指标、异常兜底</td>
+			</tr>
+	</tbody>
+</table>
+<p>跑一次：<code>python -m unittest discover -s tests</code>。以后改任何一行，先跑测试——<strong>回归在提交前被发现，而不是上线后</strong>。</p>
+<h3 id="4-真实评测的注意点">4. 真实评测的注意点</h3>
+<p>换真实模型评测时：</p>
+<ul>
+<li><strong>temperature 设 0</strong>：减少随机性，让差异主要来自代码改动（LLMClient 默认就是 0）。</li>
+<li><strong>固定 eval 集</strong>：同一套用例、同一批参数，对比才有意义。</li>
+<li><strong>控制成本</strong>：先用 FakeLLM 跑逻辑测试，再小范围跑真实评测；成功率、步数、成本三个指标一起看。</li>
+</ul>
+<h2 id="五为什么这样设计">五、为什么这样设计</h2>
+<ul>
+<li><strong>逻辑评测和模型评测分离</strong>：harness 的代码逻辑用 FakeLLM 测（快、稳、免费），模型本身的水平用真实 eval 测（慢、贵、有方差）——两者不混，才能定位问题。</li>
+<li><strong>指标要能对比</strong>：成功率、步数、成本都是数值，改代码前后各跑一次，数字说话。</li>
+<li><strong>评测和测试互补</strong>：单元测试保证组件不回归，eval 保证整体行为不退化，缺一不可。</li>
+</ul>
+<h2 id="六小结七篇的完整闭环">六、小结：七篇的完整闭环</h2>
+<p>回顾一下我们搭出来的东西：</p>
+<pre><code class="language-text">┌─────────────────────────────────────────────┐
+│                 Agent（第 3 篇）               │
+│   感知 → 思考 → 行动循环（max_steps 兜底）      │
+│  ┌─────────┬─────────┬──────────┬─────────┐  │
+│  │ LLMClient│ Session │ ToolRegistry│ Sandbox │
+│  │ 第 1 篇  │ 第 2 篇 │  第 3 篇   │ 第 5 篇 │
+│  └─────────┴─────────┴──────────┴─────────┘  │
+│  ┌─────────────────────────────────────────┐ │
+│  │  OutputSchema/Retry（第 4 篇）            │ │
+│  │  Telemetry（第 6 篇）                     │ │
+│  └─────────────────────────────────────────┘ │
+└──────────────┬──────────────────────────────┘
+               │ 评测：FakeLLM + eval 集（第 7 篇）
+</code></pre>
+<p>每一层都回答了一个真实的工程问题：为什么需要封装（1）、状态怎么管理（2）、循环怎么跑（3）、输出怎么可信（4）、边界怎么守（5）、黑盒怎么打开（6）、改动怎么验证（7）。</p>
+<p>后续值得探索的方向：流式输出、并发会话、多模型抽象（现在 <code>LLMClient</code> 只认 DeepSeek 的格式）、向量记忆替代粗暴截断、系统级沙箱（容器/OS 隔离）。每条路都能再写一个系列。</p>
+<p>配套仓库当前在 <code>lesson-07</code> tag，全部代码 + 测试见仓库根目录。</p>
+<p>系列到此完结，但 harness 的工程化之路才刚开始。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

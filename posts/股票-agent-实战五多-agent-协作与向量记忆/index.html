@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>股票 Agent 实战（五）：多 Agent 协作与向量记忆 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一多-agent专业分工">一、多 Agent：专业分工</a></li>
+    <li><a href="#二首席分析师汇总成结构化结论">二、首席分析师：汇总成结构化结论</a></li>
+    <li><a href="#三向量记忆跨问题复用历史结论">三、向量记忆：跨问题复用历史结论</a></li>
+    <li><a href="#四运行与验证">四、运行与验证</a></li>
+    <li><a href="#五小结">五、小结</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">股票 Agent 实战（五）：多 Agent 协作与向量记忆</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/">股票 Agent 实战（一）：把行情变成工具</a></li>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%8C%E8%B4%A2%E6%8A%A5%E8%A7%A3%E8%AF%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA/">股票 Agent 实战（二）：财报解读与结构化输出</a></li>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%89%E7%9B%AF%E7%9B%98%E6%8F%90%E9%86%92%E4%BB%8E%E8%A2%AB%E5%8A%A8%E9%97%AE%E7%AD%94%E5%88%B0%E4%B8%BB%E5%8A%A8%E7%9B%91%E6%8E%A7/">股票 Agent 实战（三）：盯盘提醒</a></li>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E5%9B%9B%E8%88%86%E6%83%85%E7%9B%91%E6%8E%A7%E8%AE%A9-agent-%E7%9F%A5%E9%81%93%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B6%A8%E8%B7%8C/">股票 Agent 实战（四）：舆情监控</a></li>
+<li>本文：股票 Agent 实战（五）：多 Agent 协作与向量记忆</li>
+<li>下一篇：按后续规划另行展开</li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p>前四课给一个 agent 装了四个器官：行情、财报、舆情、盯盘。但让一个 agent 同时扮演分析师、审计师、观察员，提示词会越来越臃肿，工具越堆越乱。这一课做两件事：<strong>专业分工</strong>（多 Agent）和<strong>跨问题记忆</strong>（向量记忆）。</p>
+<h2 id="一多-agent专业分工">一、多 Agent：专业分工</h2>
+<p>三个专业 agent，各带各的工具、各讲各的话：</p>
+<table>
+	<thead>
+			<tr>
+					<th>角色</th>
+					<th>专属工具</th>
+					<th>职责</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>行情分析师</td>
+					<td>实时盘口、日 K 线</td>
+					<td>价格、走势、量能</td>
+			</tr>
+			<tr>
+					<td>财报解读师</td>
+					<td>财务摘要</td>
+					<td>营收/净利增速、盈利能力、负债</td>
+			</tr>
+			<tr>
+					<td>舆情观察员</td>
+					<td>新闻情绪</td>
+					<td>市场情绪、主要事件</td>
+			</tr>
+	</tbody>
+</table>
+<p>谁上场用<strong>规则路由</strong>决定——关键词命中就派对应角色，没命中三个都上：</p>
+<pre><code class="language-python">def route_question(question: str) -&gt; list[str]:
+    matched = [
+        role for role, cfg in ROLES.items()
+        if any(keyword in question for keyword in cfg[&quot;keywords&quot;])
+    ]
+    return matched or [ROLE_MARKET, ROLE_FUNDAMENTAL, ROLE_SENTIMENT]
+</code></pre>
+<p>每个专业 agent 是 harness <code>Agent</code> 的普通实例，只是系统提示词和工具注册表不同：</p>
+<pre><code class="language-python">def build_specialist(client, role: str) -&gt; Agent:
+    cfg = ROLES[role]
+    registry = ToolRegistry()
+    for tool_impl in cfg[&quot;tools&quot;]:
+        registry.register(tool_impl)
+    return Agent(client=client, registry=registry, system_prompt=cfg[&quot;system&quot;])
+</code></pre>
+<h2 id="二首席分析师汇总成结构化结论">二、首席分析师：汇总成结构化结论</h2>
+<p>专业 agent 各自调研完后，由「首席分析师」汇总。汇总阶段用第二课的结构化输出，强制产出 <code>answer / sections / confidence</code>：</p>
+<pre><code class="language-python">REPORT_SCHEMA = OutputSchema(
+    fields={
+        &quot;answer&quot;: as_str,      # 给用户的完整回答
+        &quot;sections&quot;: as_list,   # 分点结论
+        &quot;confidence&quot;: as_str,  # 高 / 中 / 低
+    },
+    required=[&quot;answer&quot;, &quot;sections&quot;, &quot;confidence&quot;],
+)
+</code></pre>
+<p>真实运行示例（贵州茅台）：</p>
+<pre><code class="language-text">综合：茅台处于“提价驱动+资金回流”的积极窗口期，但基本面增长已明显放缓。
+- 行情：股价 1339.99 元，跌 0.66%，1338-1353 元窄幅整理，量能低迷。
+- 财报：2025 年营收 -1.20%、净利 -4.53%；2026Q1 营收 +6.34% 但净利仅 +1.47%。
+- 舆情：飞天茅台连续提价，主力净流入约 4.89 亿元，情绪偏积极。
+结论置信度：中
+</code></pre>
+<h2 id="三向量记忆跨问题复用历史结论">三、向量记忆：跨问题复用历史结论</h2>
+<p>多 Agent 解决了「分工」，记忆解决「连续性」：问过一次茅台，下次再问相关问题时，把历史结论找回来作为参考。</p>
+<p>设计上先用 <strong>Embedder 协议</strong>隔离具体嵌入实现：</p>
+<pre><code class="language-python">class Embedder:
+    def embed(self, texts: list[str]) -&gt; list[list[float]]: ...
+
+class CharNgramEmbedder(Embedder):        # 默认：字符 bigram 哈希，离线、可复现
+    ...
+
+class SentenceTransformerEmbedder(Embedder):  # 生产：多语言语义模型，需下载
+    ...
+</code></pre>
+<p><code>VectorMemory</code> 只依赖协议：写入时嵌入并保存，查询时嵌入后做余弦相似度检索，支持 JSON 持久化。向量规模大了可以无缝换 faiss 索引（环境已预装）。</p>
+<pre><code class="language-python">memory = VectorMemory.load(path, CharNgramEmbedder())
+memory.add(f&quot;Q: {question}\nA: {answer}&quot;, {&quot;type&quot;: &quot;analysis&quot;})
+hits = memory.search(&quot;贵州茅台财报基本面怎么样&quot;, top_k=2)
+</code></pre>
+<p>真实验证：存入一次茅台分析后，用新问题检索，正确召回历史结论，相似度 0.20。</p>
+<h2 id="四运行与验证">四、运行与验证</h2>
+<pre><code class="language-bash"># 多 Agent 协作
+conda activate stock-agent   # 每次开新终端先切换环境
+python stock-agent/team.py &quot;贵州茅台最近怎么样？&quot;
+
+# 多 Agent + 向量记忆（默认离线嵌入；生产可加 --embedder st）
+python stock-agent/team.py --memory stock-agent/memory_store.json &quot;贵州茅台最近怎么样？&quot;
+</code></pre>
+<p>离线测试从 18 项增至 <strong>23 项</strong>（新增：角色路由、报告 Schema 校验、记忆检索、持久化往返）。</p>
+<p>这一课又踩了两个真实坑，都成了教学素材：</p>
+<ol>
+<li><strong>日期对象序列化</strong>——真实 K 线的日期列是 <code>date</code> 对象，<code>json.dumps</code> 直接崩；数据源层统一转字符串，并把测试数据改成真实类型防止回归；</li>
+<li><strong>嵌入模型下载受限</strong>——当前网络连不上 HuggingFace（镜像也超时），于是默认嵌入器改为离线的字符 n-gram，生产环境一条命令换回语义模型——这就是协议抽象的价值。</li>
+</ol>
+<h2 id="五小结">五、小结</h2>
+<p>第五课的收获：</p>
+<ol>
+<li><strong>多 Agent 的价值是分工，不是堆模型</strong>——每个 agent 只有自己的工具和职责，提示词保持简单；</li>
+<li><strong>规则路由 + 结构化汇总</strong>——谁上场用规则（可测），结论怎么出用 Schema（可消费）；</li>
+<li><strong>记忆的关键是协议</strong>——嵌入模型可插拔，记忆逻辑不绑定任何具体模型；</li>
+<li><strong>真实环境会教你取舍</strong>——下载不了的模型，用一个可复现的轻量替代，照样跑通全链路。</li>
+</ol>
+<p>系列继续：后续按新的规划展开，下一篇敬请期待。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

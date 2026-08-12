@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>AI Harness 工程实战（二）：多轮对话与上下文管理 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一场景让模型记住对话">一、场景：让模型&quot;记住&quot;对话</a></li>
+    <li><a href="#二它暴露了哪些问题">二、它暴露了哪些问题</a></li>
+    <li><a href="#三工程化演进会话对象--上下文预算">三、工程化演进：会话对象 + 上下文预算</a>
+      <ul>
+        <li><a href="#1-会话隔离session">1. 会话隔离：Session</a></li>
+        <li><a href="#2-先估算再裁剪">2. 先估算，再裁剪</a></li>
+        <li><a href="#3-窗口截断预算内保留最近的">3. 窗口截断：预算内保留最近的</a></li>
+        <li><a href="#4-摘要压缩比直接丢更友好">4. 摘要压缩：比直接丢更友好</a></li>
+      </ul>
+    </li>
+    <li><a href="#四为什么这样设计">四、为什么这样设计</a></li>
+    <li><a href="#五小结">五、小结</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">AI Harness 工程实战（二）：多轮对话与上下文管理</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%80%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-harness/">AI Harness 工程实战（一）：为什么需要 harness</a></li>
+<li>本文：AI Harness 工程实战（二）：多轮对话与上下文管理</li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%89%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E5%BE%AA%E7%8E%AF/">AI Harness 工程实战（三）：工具调用循环</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%9B%9B%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E4%B8%8E%E9%87%8D%E8%AF%95/">AI Harness 工程实战（四）：结构化输出与重试</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%BA%94%E6%9D%83%E9%99%90%E4%B8%8E%E6%B2%99%E7%AE%B1/">AI Harness 工程实战（五）：权限与沙箱</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%85%AD%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/">AI Harness 工程实战（六）：可观测性</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%83%E5%A6%82%E4%BD%95%E8%AF%84%E6%B5%8B%E8%BF%99%E4%B8%AA-harness/">AI Harness 工程实战（七）：如何评测这个 harness</a></li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p>上一篇，我们把&quot;一次模型调用&quot;封装成了可靠的 <code>LLMClient</code>。但真实产品里，用户不会只问一句：客服助手要来回追问，编程助手要连续修改，业务 Agent 要和用户确认细节。这一篇解决的就是&quot;让模型记住对话&quot;以及随之而来的上下文管理问题。</p>
+<p>你会发现，多轮对话远不是&quot;把消息都存下来&quot;那么简单——存下来只是第一步，<strong>怎么在有限的窗口和预算里装下越来越长的历史</strong>，才是真正的工程问题。</p>
+<h2 id="一场景让模型记住对话">一、场景：让模型&quot;记住&quot;对话</h2>
+<p>模型本身是无状态的：每一次请求，你都得把完整的对话历史塞进 <code>messages</code> 里，它才知道&quot;前因后果&quot;。所以多轮对话的本质是<strong>由 harness 来维护状态</strong>。</p>
+<p>最简单的实现，就是用一个全局列表：</p>
+<pre><code class="language-python">messages = []
+
+def chat(user_text: str) -&gt; str:
+    messages.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: user_text})
+    reply = client.chat(messages)
+    messages.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: reply})
+    return reply
+</code></pre>
+<p>看起来没毛病，跑两周就会出事。</p>
+<h2 id="二它暴露了哪些问题">二、它暴露了哪些问题</h2>
+<ul>
+<li><strong>会话互相污染</strong>：全局列表意味着所有用户共享同一份记忆。A 用户刚问完&quot;我的订单号是多少&quot;，B 用户的下一个问题里就带着 A 的历史——这在线上是事故级别的 bug。</li>
+<li><strong>上下文无限增长</strong>：每轮都全量重发。聊到第 50 轮时，一次请求可能要带几万 token，超过模型窗口上限直接报错，没超的也在烧钱。</li>
+<li><strong>角色与顺序全靠手拼</strong>：system prompt、历史、最新消息拼接逻辑散落在各处，改一处忘一处。</li>
+<li><strong>无法定位与清理</strong>：想清空某个会话、想回滚到某个节点，全局列表根本做不到。</li>
+</ul>
+<p>这些问题的根源是同一个：<strong>会话状态没有一个明确的所有者</strong>。</p>
+<h2 id="三工程化演进会话对象--上下文预算">三、工程化演进：会话对象 + 上下文预算</h2>
+<h3 id="1-会话隔离session">1. 会话隔离：Session</h3>
+<p>第一步，把&quot;对话状态&quot;收进一个对象里，一个用户一个 <code>Session</code>：</p>
+<pre><code class="language-python">@dataclass
+class Session:
+    system_prompt: str = &quot;&quot;
+    messages: list[dict[str, str]] = field(default_factory=list)
+
+    def user(self, content: str) -&gt; None:
+        self.messages.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: content})
+
+    def assistant(self, content: str) -&gt; None:
+        self.messages.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: content})
+
+    def to_messages(self) -&gt; list[dict[str, str]]:
+        if not self.system_prompt:
+            return list(self.messages)
+        return [{&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: self.system_prompt}, *self.messages]
+</code></pre>
+<p>会话互不污染，并发场景下每个用户各管各的。<code>system_prompt</code> 的拼装也收口到了 <code>to_messages()</code>。</p>
+<h3 id="2-先估算再裁剪">2. 先估算，再裁剪</h3>
+<p>第二步是控制上下文规模。要裁剪，先得知道&quot;现在有多少 token&quot;。生产环境常用 tiktoken 精确计数，但为了保持零框架依赖，教程先用启发式估算（中文约 1 字 ≈ 0.5~1 token，按字符数折算），足够我们在工程层面把逻辑讲清楚：</p>
+<pre><code class="language-python">CHARS_PER_TOKEN = 2.0
+
+def estimate_tokens(text: str) -&gt; int:
+    if not text:
+        return 0
+    return max(1, int(len(text) / CHARS_PER_TOKEN))
+</code></pre>
+<h3 id="3-窗口截断预算内保留最近的">3. 窗口截断：预算内保留最近的</h3>
+<p><code>ContextPolicy</code> 定义上下文预算（<code>max_tokens - reserve_tokens</code>，后者留给模型回复）。超预算时，<code>trim_context</code> 优先保留 system prompt 和<strong>最近的对话</strong>，从最旧的消息开始丢：</p>
+<pre><code class="language-python">def _window(system, body, policy):
+    total = estimate_messages_tokens(system)
+    kept = []
+    for message in reversed(body):          # 从最新往最旧遍历
+        cost = estimate_messages_tokens([message])
+        if total + cost &gt; policy.context_budget:
+            break
+        kept.append(message)
+        total += cost
+    return system + list(reversed(kept))
+</code></pre>
+<p>为什么优先保最近的？因为模型对最近几轮上下文最敏感——&ldquo;刚刚说的需求&quot;比&quot;三小时前聊的内容&quot;重要得多。</p>
+<h3 id="4-摘要压缩比直接丢更友好">4. 摘要压缩：比直接丢更友好</h3>
+<p>窗口截断的代价是&quot;硬丢&rdquo;，重要信息可能随之丢失。所以再给一个 <code>summary</code> 模式：把最早的一批消息交给一个摘要回调（回调里可以再调一次模型），压缩成一段摘要，再继续按窗口截断兜底：</p>
+<pre><code class="language-python">policy = ContextPolicy(
+    max_tokens=2000,
+    reserve_tokens=200,
+    mode=&quot;summary&quot;,
+    summarizer=lambda oldest: f&quot;（此前对话摘要）{summarize_with_llm(oldest)}&quot;,
+)
+messages = trim_context(session, policy)
+</code></pre>
+<p>演示脚本里的效果：</p>
+<pre><code class="language-text">裁剪前：11 条消息，约 1200 token
+裁剪后：5 条消息，约 380 token
+预算上限：1800 token
+</code></pre>
+<h2 id="四为什么这样设计">四、为什么这样设计</h2>
+<ul>
+<li><strong>状态要有明确的所有者</strong>：<code>Session</code> 把&quot;记忆&quot;从全局变成实例，隔离问题迎刃而解，也为后面做并发、持久化留了位置。</li>
+<li><strong>估算先行、裁剪兜底</strong>：不估算就裁剪是盲人摸象；估算用零依赖启发式，是&quot;能跑&quot;和&quot;精确&quot;之间的合理起点。</li>
+<li><strong>摘要走回调</strong>：harness 不绑定任何摘要模型，只定义&quot;把一段历史变成一段摘要&quot;的接口，具体实现由上层决定——这保持了 harness 的薄和可替换。</li>
+<li><strong>为后续演进留口</strong>：<code>Session</code> 之后会成为 <code>Agent</code> 的一部分；工具调用循环里，模型每执行一步工具，也都是往 <code>Session</code> 里追加消息。</li>
+</ul>
+<h2 id="五小结">五、小结</h2>
+<p>本篇的收获：</p>
+<ol>
+<li>多轮对话的本质是 harness 维护状态，状态必须有明确的所有者（<code>Session</code>）。</li>
+<li>上下文不是&quot;全塞进去&quot;，而是&quot;预算内最优化&quot;：估算 → 裁剪 → 必要时压缩。</li>
+<li>截断优先保 system 和最近消息；摘要压缩是&quot;先压缩、再兜底&quot;的升级策略。</li>
+</ol>
+<p>配套仓库当前在 <code>lesson-02</code> tag，代码见 <code>harness/session.py</code> 和 <code>harness/context.py</code>。</p>
+<p>下一篇，我们让模型真正&quot;干活&quot;：<strong>工具调用循环</strong>——模型会自己决定调用什么函数、拿到结果、继续思考，一个最小的 Agent 就此诞生。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

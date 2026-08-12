@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>系统架构设计方法论（五）：架构演进与治理 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一演进式架构">一、演进式架构</a>
+      <ul>
+        <li><a href="#11-演进是设计的一部分">1.1 演进是设计的一部分</a></li>
+        <li><a href="#12-反对推翻重来">1.2 反对&quot;推翻重来&quot;</a></li>
+      </ul>
+    </li>
+    <li><a href="#二单体到微服务的演进路径">二、单体到微服务的演进路径</a>
+      <ul>
+        <li><a href="#21-演进不是一步到位">2.1 演进不是一步到位</a></li>
+        <li><a href="#22-演进配套">2.2 演进配套</a></li>
+      </ul>
+    </li>
+    <li><a href="#三改造模式">三、改造模式</a></li>
+    <li><a href="#四架构治理">四、架构治理</a>
+      <ul>
+        <li><a href="#41-决策记录adr">4.1 决策记录（ADR）</a></li>
+        <li><a href="#42-架构评审与约束自动化">4.2 架构评审与约束自动化</a></li>
+        <li><a href="#43-技术债管理">4.3 技术债管理</a></li>
+        <li><a href="#44-反馈闭环">4.4 反馈闭环</a></li>
+        <li><a href="#45-康威定律与团队拓扑">4.5 康威定律与团队拓扑</a></li>
+      </ul>
+    </li>
+    <li><a href="#五权衡取舍">五、权衡取舍</a></li>
+    <li><a href="#六落地案例">六、落地案例</a></li>
+    <li><a href="#七面试考察点与自查清单">七、面试考察点与自查清单</a></li>
+    <li><a href="#相关阅读">相关阅读</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">系统架构设计方法论（五）：架构演进与治理</h1>
+        </header>
+
+        <div class="page-content">
+            <h2 id="前言">前言</h2>
+<p>没有哪个架构是一次画完就一劳永逸的。业务在变、团队在变、技术在变，架构要么主动演进，要么被动腐化。很多系统的死法不是&quot;设计错了&quot;，而是&quot;设计完就不管了&quot;：技术债越积越多，改一个需求要动十个模块，最后只能推翻重来。</p>
+<p>本系列最后一篇讲两个问题：<strong>架构如何演进</strong>（变化的方向和节奏），<strong>架构如何治理</strong>（保证演进不失控）。</p>
+<blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%B8%80%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E8%BE%B9%E7%95%8C%E5%88%92%E5%88%86/">需求分析与边界划分</a></li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%8C%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B8%8E%E5%88%86%E5%B1%82/">模块化与分层</a></li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%B8%89%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%E5%86%B3%E7%AD%96/">技术选型与决策</a></li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E5%9B%9B%E6%80%A7%E8%83%BD%E5%8F%AF%E7%94%A8%E6%80%A7%E4%B8%8E%E6%89%A9%E5%B1%95%E6%80%A7/">性能、可用性与扩展性</a></li>
+<li>本文：架构演进与治理</li>
+</ul>
+</blockquote>
+<h2 id="一演进式架构">一、演进式架构</h2>
+<h3 id="11-演进是设计的一部分">1.1 演进是设计的一部分</h3>
+<p>演进式架构的核心思想：<strong>架构不是终点，而是持续演化的过程</strong>。设计时要为变化留出通道，而不是试图一次预测所有变化。</p>
+<p>三个支撑原则：</p>
+<ol>
+<li><strong>增量变更</strong>：每次改动都是小的、可回滚的，而不是大爆炸式重构</li>
+<li><strong>适应度函数</strong>：把&quot;架构不能坏&quot;翻译成可自动检查的约束（依赖规则、圈复杂度、接口契约），持续验证</li>
+<li><strong>关注可演化性</strong>：模块边界、接口契约、防腐层都是为&quot;将来能改&quot;服务的</li>
+</ol>
+<h3 id="12-反对推翻重来">1.2 反对&quot;推翻重来&quot;</h3>
+<p>&ldquo;重写&quot;是最大的架构陷阱：旧系统的业务逻辑、边界情况、踩过的坑全部丢失，新系统往往在两年后变成另一个旧系统。正确姿势是绞杀者模式——新功能走新架构，老功能逐步迁移，直到旧系统被自然淘汰。</p>
+<h2 id="二单体到微服务的演进路径">二、单体到微服务的演进路径</h2>
+<h3 id="21-演进不是一步到位">2.1 演进不是一步到位</h3>
+<p><a href="/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E5%85%AD%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/">分布式微服务架构设计</a>详细讲了微服务的拆分与治理，但更关键的是<strong>路径</strong>：</p>
+<pre><code>单体（模块化内聚）
+  → 模块化单体（包边界清晰）
+  → 垂直拆分（把变化最频繁、故障影响最大的模块拆成服务）
+  → 微服务（稳定后按需继续拆，配合网关/注册中心/配置中心）
+</code></pre>
+<p>每一步都基于明确的信号（变化频率、团队规模、故障影响），而不是&quot;微服务更高级所以拆&rdquo;。</p>
+<h3 id="22-演进配套">2.2 演进配套</h3>
+<p>拆服务的同时，治理设施必须跟上：网关（<a href="/posts/spring-cloud-gateway%E7%BD%91%E5%85%B3%E8%B7%AF%E7%94%B1%E4%B8%8E%E8%BF%87%E6%BB%A4%E5%99%A8/">Spring Cloud Gateway</a>)、注册配置中心（<a href="/posts/nacos-%E7%BB%BC%E5%90%88%E5%AE%9E%E6%88%98%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83--%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E4%B8%80%E4%BD%93%E5%8C%96/">Nacos</a>)、链路追踪（<a href="/posts/spring-cloud-%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AAsleuth--zipkin-%E5%85%A8%E9%93%BE%E8%B7%AF%E7%9B%91%E6%8E%A7/">Sleuth</a>)。缺了这些，拆分只会换来分布式复杂度，拿不到收益。</p>
+<h2 id="三改造模式">三、改造模式</h2>
+<p>老系统改造有三个成熟模式：</p>
+<table>
+	<thead>
+			<tr>
+					<th>模式</th>
+					<th>做法</th>
+					<th>适用</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>绞杀者（Strangler）</td>
+					<td>新功能走新架构，旧功能逐步迁移</td>
+					<td>长期渐进改造</td>
+			</tr>
+			<tr>
+					<td>防腐层（ACL）</td>
+					<td>新旧系统之间加翻译层</td>
+					<td>保护新系统不被旧模型污染</td>
+			</tr>
+			<tr>
+					<td>并行运行</td>
+					<td>新旧同时跑，结果对比验证</td>
+					<td>高风险核心链路</td>
+			</tr>
+	</tbody>
+</table>
+<p>这三个模式本质都是&quot;<strong>让新旧共存、逐步替换</strong>&quot;，把一次性大改造拆成可控的小步骤。</p>
+<h2 id="四架构治理">四、架构治理</h2>
+<h3 id="41-决策记录adr">4.1 决策记录（ADR）</h3>
+<p>架构决策必须有记录：<strong>背景、选项、决定、后果、关联决策</strong>。ADR 的价值不是文档本身，而是让后来的工程师（包括三个月后的自己）知道&quot;为什么这么设计、当时放弃了什么&quot;。</p>
+<pre><code>ADR 模板：
+- 标题：ADR-004 引入消息队列削峰
+- 状态：已接受
+- 背景：下单峰值 5000 QPS，数据库扛不住
+- 决策：引入 Kafka，下单请求异步化
+- 后果：可用性提升；代价是最终一致性与运维复杂度
+- 关联：ADR-001（服务拆分）、ADR-003（选型评估）
+</code></pre>
+<h3 id="42-架构评审与约束自动化">4.2 架构评审与约束自动化</h3>
+<p>治理的两种手段：</p>
+<ul>
+<li><strong>人工评审</strong>：架构评审会、变更评审，但人肉检查有遗漏</li>
+<li><strong>自动约束</strong>：把架构规则写进构建（ArchUnit、依赖检查、API 契约测试），违反即失败</li>
+</ul>
+<p>自动约束是&quot;适应度函数&quot;的具体落地：架构规则一旦可执行，腐化速度会大幅下降。</p>
+<h3 id="43-技术债管理">4.3 技术债管理</h3>
+<p>技术债不是&quot;不该有&quot;，而是<strong>显式管理</strong>：</p>
+<pre><code>技术债管理：
+1. 登记：每个债有描述、位置、影响面
+2. 量化：按影响（故障风险、开发效率）分级
+3. 节奏：每迭代还一部分债，而不是集中大还
+4. 复盘：线上事故反哺债务清单
+</code></pre>
+<p>债务 vs 速度的权衡要摆上台面：短期快速上线借债可以，但要记账、计息、定还款计划。</p>
+<h3 id="44-反馈闭环">4.4 反馈闭环</h3>
+<p>演进的输入来自反馈：<strong>可观测性 → 告警 → 复盘 → 改造</strong>。没有数据就没有演进方向。</p>
+<ul>
+<li><a href="/posts/%E6%94%AF%E4%BB%98%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E5%8D%81%E6%94%AF%E4%BB%98%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/">支付可观测性</a>：全链路日志、指标、追踪三位一体</li>
+<li><a href="/posts/k8s%E5%8D%81%E4%BA%8C%E7%9B%91%E6%8E%A7%E4%B8%8E%E6%97%A5%E5%BF%97-%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E5%85%A5%E9%97%A8/">K8s 监控与日志</a>：平台层可观测性</li>
+<li><a href="/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E5%85%AB%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E4%B8%8E-cqrs/">事件驱动与 CQRS</a>：架构形态随业务反馈演进的方向之一</li>
+</ul>
+<h3 id="45-康威定律与团队拓扑">4.5 康威定律与团队拓扑</h3>
+<p>架构跟随沟通结构。想要目标架构，先设计团队边界：一个域一个团队，团队自治，契约明确。团队拓扑（Stream-aligned / Platform / Enabling / Complicated-subsystem）是现代架构治理的重要框架。</p>
+<h2 id="五权衡取舍">五、权衡取舍</h2>
+<ul>
+<li><strong>重构时机</strong>：重构永远&quot;没有完美时机&quot;。判断标准：改动频率 × 修改成本（如果经常改的地方越来越难改，就是时候了）</li>
+<li><strong>治理强度</strong>：流程过重拖慢迭代，无治理必然腐化；治理应该&quot;自动化的约束多、人工的流程少&quot;</li>
+<li><strong>演进速度</strong>：快演进 vs 稳定运行，用灰度、开关、兼容性设计兼得</li>
+</ul>
+<h2 id="六落地案例">六、落地案例</h2>
+<ul>
+<li><strong>支付系统演进</strong>：从单体支付应用 → 模块化 → 按域拆分为支付/账务/渠道/风控服务，配套网关、Nacos、Kafka、Seata。整个<a href="/posts/%E6%94%AF%E4%BB%98%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%80%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84%E6%A6%82%E8%A7%88/">支付系统架构设计</a>系列就是演进结果的静态切片，而演进过程正是本系列方法论的应用</li>
+<li><strong>WebGIS 演进</strong>：<a href="/posts/java-webgis-%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97%E4%B8%80%E6%A6%82%E8%BF%B0%E4%B8%8E%E6%8A%80%E6%9C%AF%E6%A0%88%E9%80%89%E5%9E%8B/">WebGIS 实战指南</a>从技术栈选型到地图服务、空间数据读写逐步展开，是典型的需求驱动演进</li>
+<li><strong>微服务治理</strong>：<a href="/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E5%85%AD%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/">分布式微服务架构设计</a>覆盖拆分后的治理全景</li>
+</ul>
+<h2 id="七面试考察点与自查清单">七、面试考察点与自查清单</h2>
+<p><strong>高频面试题：</strong></p>
+<ol>
+<li>&ldquo;你主导过什么架构演进？&quot;——用&quot;背景 → 信号 → 方案 → 步骤 → 结果 → 复盘&quot;讲，不要只讲结果</li>
+<li>&ldquo;技术债怎么管理？&quot;——登记、量化、节奏、复盘四步</li>
+<li>&ldquo;这个老系统要不要重写？&quot;——先问能不能绞杀，重写是最后手段</li>
+<li>&ldquo;怎么防止架构腐化？&quot;——适应度函数（自动约束）+ ADR + 评审 + 反馈闭环</li>
+</ol>
+<p><strong>自查清单：</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> 每个重要架构决策有 ADR</li>
+<li><input disabled="" type="checkbox"> 架构规则有自动化检查，不只靠人肉 review</li>
+<li><input disabled="" type="checkbox"> 技术债有清单、有分级、有还款节奏</li>
+<li><input disabled="" type="checkbox"> 能画出系统当前所处演进阶段和下一步方向</li>
+</ul>
+<h2 id="相关阅读">相关阅读</h2>
+<ul>
+<li><a href="/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E5%85%AD%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/">分布式系统设计（六）：微服务架构设计</a></li>
+<li><a href="/posts/spring-cloud-gateway%E7%BD%91%E5%85%B3%E8%B7%AF%E7%94%B1%E4%B8%8E%E8%BF%87%E6%BB%A4%E5%99%A8/">Spring Cloud Gateway：网关路由与过滤器</a></li>
+<li><a href="/posts/%E6%94%AF%E4%BB%98%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E5%8D%81%E6%94%AF%E4%BB%98%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/">支付系统架构设计（十）：支付可观测性</a></li>
+<li><a href="/posts/k8s%E5%8D%81%E4%BA%8C%E7%9B%91%E6%8E%A7%E4%B8%8E%E6%97%A5%E5%BF%97-%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E5%85%A5%E9%97%A8/">K8s（十二）：监控与日志 — 可观测性入门</a></li>
+<li>上一篇：<a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E5%9B%9B%E6%80%A7%E8%83%BD%E5%8F%AF%E7%94%A8%E6%80%A7%E4%B8%8E%E6%89%A9%E5%B1%95%E6%80%A7/">性能、可用性与扩展性</a></li>
+<li>系列开篇：<a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%B8%80%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E8%BE%B9%E7%95%8C%E5%88%92%E5%88%86/">需求分析与边界划分</a></li>
+</ul>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

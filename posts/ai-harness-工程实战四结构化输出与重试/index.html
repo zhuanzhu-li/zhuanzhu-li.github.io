@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>AI Harness 工程实战（四）：结构化输出与重试 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一场景业务要的是可靠-json">一、场景：业务要的是可靠 JSON</a></li>
+    <li><a href="#二朴素实现jsonloads-赌一把">二、朴素实现：<code>json.loads</code> 赌一把</a></li>
+    <li><a href="#三它暴露了哪些问题">三、它暴露了哪些问题</a></li>
+    <li><a href="#四工程化演进解析--校验--内容重试">四、工程化演进：解析 → 校验 → 内容重试</a>
+      <ul>
+        <li><a href="#1-容错解析先把-json-捞出来">1. 容错解析：先把 JSON 捞出来</a></li>
+        <li><a href="#2-schema-校验json-合法--业务可用">2. Schema 校验：JSON 合法 ≠ 业务可用</a></li>
+        <li><a href="#3-内容重试把错误反馈给模型">3. 内容重试：把错误反馈给模型</a></li>
+        <li><a href="#4-统一重试策略指数退避--抖动">4. 统一重试策略：指数退避 + 抖动</a></li>
+      </ul>
+    </li>
+    <li><a href="#五为什么这样设计">五、为什么这样设计</a></li>
+    <li><a href="#六小结">六、小结</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">AI Harness 工程实战（四）：结构化输出与重试</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%80%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-harness/">AI Harness 工程实战（一）：为什么需要 harness</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%BA%8C%E5%A4%9A%E8%BD%AE%E5%AF%B9%E8%AF%9D%E4%B8%8E%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AE%A1%E7%90%86/">AI Harness 工程实战（二）：多轮对话与上下文管理</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%89%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E5%BE%AA%E7%8E%AF/">AI Harness 工程实战（三）：工具调用循环</a></li>
+<li>本文：AI Harness 工程实战（四）：结构化输出与重试</li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%BA%94%E6%9D%83%E9%99%90%E4%B8%8E%E6%B2%99%E7%AE%B1/">AI Harness 工程实战（五）：权限与沙箱</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%85%AD%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/">AI Harness 工程实战（六）：可观测性</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%83%E5%A6%82%E4%BD%95%E8%AF%84%E6%B5%8B%E8%BF%99%E4%B8%AA-harness/">AI Harness 工程实战（七）：如何评测这个 harness</a></li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p>前三篇，harness 会聊天、会记上下文、会调工具了。但有一个问题一直悬着：<strong>模型输出的是文本，业务要的是数据</strong>。不管是&quot;从会议记录里提取字段&quot;还是&quot;把工具调用参数标准化&quot;，只要模型输出 JSON，就绕不开两件事：解析、校验。而一旦有&quot;可能失败&quot;的操作，就绕不开第三件事：<strong>重试</strong>。</p>
+<p>这一篇把这三件事做扎实。</p>
+<h2 id="一场景业务要的是可靠-json">一、场景：业务要的是可靠 JSON</h2>
+<p>假设你的产品要自动从会议记录里提取结构化信息：</p>
+<pre><code class="language-json">{
+  &quot;date&quot;: &quot;2026-08-07&quot;,
+  &quot;attendees&quot;: [&quot;张三&quot;, &quot;李四&quot;],
+  &quot;action_items&quot;: [&quot;下周五前完成原型&quot;]
+}
+</code></pre>
+<p>下游接口、数据库、任务系统都要这个结构。模型输出只要差一点——多一句解释、少一个字段、日期变成字符串还是数字没说清——下游就崩。</p>
+<h2 id="二朴素实现jsonloads-赌一把">二、朴素实现：<code>json.loads</code> 赌一把</h2>
+<pre><code class="language-python">reply = client.chat([{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: prompt}])
+data = json.loads(reply)          # 祈祷
+return data[&quot;date&quot;]               # 祈祷字段在
+</code></pre>
+<p>本地调通三次，就以为稳了。上线第一周，<code>JSONDecodeError</code> 和 <code>KeyError</code> 轮流值班。</p>
+<h2 id="三它暴露了哪些问题">三、它暴露了哪些问题</h2>
+<ul>
+<li><strong>模型输出天生不守规矩</strong>：可能给你 markdown 围栏（<code>```json</code>）、前后夹带&quot;好的，结果如下&quot;、甚至输出被截断成半个 JSON。</li>
+<li><strong>只解析不校验</strong>：JSON 合法 ≠ 业务可用。字段缺了、类型错了、日期格式不对，<code>json.loads</code> 全都不知道。</li>
+<li><strong>失败后没策略</strong>：解析失败就报错，不重试；真要重试，也是&quot;死循环重试&quot;——没有退避、没有上限、不知道什么错值得重试。</li>
+<li><strong>把两类重试混为一谈</strong>：网络超时重试和&quot;内容不合格重试&quot;是两件事，前者等一等就好，后者要把错误<strong>反馈给模型</strong>让它改。</li>
+</ul>
+<h2 id="四工程化演进解析--校验--内容重试">四、工程化演进：解析 → 校验 → 内容重试</h2>
+<h3 id="1-容错解析先把-json-捞出来">1. 容错解析：先把 JSON 捞出来</h3>
+<p><code>parse_json</code> 按&quot;由严到松&quot;的三级策略来：</p>
+<pre><code class="language-python">def parse_json(text: str):
+    stripped = text.strip()
+    try:
+        return json.loads(stripped)              # 1. 整体解析
+    except json.JSONDecodeError:
+        pass
+    fenced = re.search(r&quot;```(?:json)?\s*(.*?)```&quot;, stripped, re.DOTALL)
+    if fenced:
+        try:
+            return json.loads(fenced.group(1))   # 2. 剥 markdown 围栏
+        except json.JSONDecodeError:
+            pass
+    # 3. 从第一个 { 或 [ 截到最后一个 } 或 ]，容忍前后夹带文字
+    ...
+</code></pre>
+<p>三种情况：干净输出直接解析；带围栏剥掉再解析；夹带废话截取 JSON 部分。全失败才抛错——<strong>先给模型最大宽容，最后一道防线才报错</strong>。</p>
+<h3 id="2-schema-校验json-合法--业务可用">2. Schema 校验：JSON 合法 ≠ 业务可用</h3>
+<p>解析出 dict 只是第一步，还得校验字段和类型：</p>
+<pre><code class="language-python">schema = OutputSchema(
+    fields={&quot;date&quot;: as_str, &quot;attendees&quot;: as_list, &quot;action_items&quot;: as_list},
+    required=[&quot;date&quot;, &quot;attendees&quot;, &quot;action_items&quot;],
+)
+result = schema.validate(data)   # 缺字段、类型错都会抛带说明的 ValueError
+</code></pre>
+<p>校验函数就是一个&quot;类型守卫&quot;：<code>as_str</code>、<code>as_int</code>、<code>as_list</code>，不合格抛异常，异常信息就是给模型的&quot;整改意见&quot;。</p>
+<h3 id="3-内容重试把错误反馈给模型">3. 内容重试：把错误反馈给模型</h3>
+<p>解析或校验失败后，最有效的不是&quot;再问一遍&quot;，而是<strong>把失败原因告诉模型，让它改</strong>：</p>
+<pre><code class="language-python">convo.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: content})          # 它刚才的输出
+convo.append({&quot;role&quot;: &quot;user&quot;,
+              &quot;content&quot;: f&quot;输出不符合要求：{exc}。请只输出符合格式的 JSON。&quot;})
+data = client.chat_completion(convo)
+</code></pre>
+<p><code>chat_json</code> 把&quot;调用 → 解析 → 校验 → 反馈 → 重试&quot;收进一个函数，最多 N 次：</p>
+<pre><code class="language-python">result = chat_json(
+    LLMClient(), messages, schema,
+    retry_policy=RetryPolicy(max_attempts=3, base_delay=0.2),
+)
+</code></pre>
+<h3 id="4-统一重试策略指数退避--抖动">4. 统一重试策略：指数退避 + 抖动</h3>
+<p>重试不能蛮干。<code>RetryPolicy</code> 提供指数退避和抖动（jitter）：</p>
+<pre><code class="language-python">@dataclass
+class RetryPolicy:
+    max_attempts: int = 3
+    base_delay: float = 1.0
+    max_delay: float = 8.0
+    jitter: bool = True
+
+    def delay(self, attempt: int) -&gt; float:
+        wait = min(self.max_delay, self.base_delay * (2 ** (attempt - 1)))
+        if self.jitter:
+            wait = wait * random.uniform(0.5, 1.0)
+        return wait
+</code></pre>
+<p>为什么要有 jitter？如果没有，100 个请求同时失败、同时退避、同时重试，会把下游再打崩一次——<strong>重试风暴</strong>。加一点随机抖动，把重试时间错开。</p>
+<p>顺便，上一版的网络重试也重构进了 <code>retry()</code>，<code>LLMClient</code> 现在的重试逻辑统一走 <code>RetryPolicy</code>，网络错误按 <code>retryable</code> 标记决定要不要重试。</p>
+<h2 id="五为什么这样设计">五、为什么这样设计</h2>
+<ul>
+<li><strong>解析宽容、校验严格</strong>：解析负责&quot;把模型输出变成 JSON&quot;，尽量包容；校验负责&quot;把 JSON 变成业务数据&quot;，一点不让。两层职责分开，各改各的。</li>
+<li><strong>内容重试 vs 网络重试分开</strong>：网络重试是&quot;等一等再来&quot;，内容重试是&quot;告诉模型哪里错了再来&quot;——两者都复用退避策略，但语义完全不同，不能混。</li>
+<li><strong>重试必须有预算</strong>：<code>max_attempts</code> 是上限，配上指数退避，最坏情况也花得起；&ldquo;无限重试&quot;不是可靠性，是事故。</li>
+<li><strong>错误信息可读</strong>：校验异常直接拼接进反馈 prompt，模型的修正更有针对性。</li>
+</ul>
+<h2 id="六小结">六、小结</h2>
+<p>本篇的收获：</p>
+<ol>
+<li>结构化输出 = 容错解析 + 严格校验，两步各司其职。</li>
+<li>内容重试的正确姿势是&quot;反馈错误给模型&rdquo;，而不是盲目重问。</li>
+<li>重试要讲策略：指数退避 + jitter + 上限，网络重试和内容重试分开管理。</li>
+</ol>
+<p>配套仓库当前在 <code>lesson-04</code> tag，代码见 <code>harness/output.py</code> 和 <code>harness/retry.py</code>。</p>
+<p>下一篇，工具能干活了，风险也来了：<strong>权限与沙箱</strong>——让模型&quot;什么都能干&quot;之前，先想清楚它&quot;应该能干哪些&quot;。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

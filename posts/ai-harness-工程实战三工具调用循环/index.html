@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>AI Harness 工程实战（三）：工具调用循环 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一场景让模型干活">一、场景：让模型&quot;干活&quot;</a></li>
+    <li><a href="#二朴素实现让模型输出-json自己解析">二、朴素实现：让模型输出 JSON，自己解析</a></li>
+    <li><a href="#三它暴露了哪些问题">三、它暴露了哪些问题</a></li>
+    <li><a href="#四工程化演进工具注册表--agent-主循环">四、工程化演进：工具注册表 + Agent 主循环</a>
+      <ul>
+        <li><a href="#1-工具注册表把函数升级成工具">1. 工具注册表：把&quot;函数&quot;升级成&quot;工具&quot;</a></li>
+        <li><a href="#2-agent-主循环感知--思考--行动">2. Agent 主循环：感知 → 思考 → 行动</a></li>
+      </ul>
+    </li>
+    <li><a href="#五为什么这样设计">五、为什么这样设计</a></li>
+    <li><a href="#六小结">六、小结</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">AI Harness 工程实战（三）：工具调用循环</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%80%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-harness/">AI Harness 工程实战（一）：为什么需要 harness</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%BA%8C%E5%A4%9A%E8%BD%AE%E5%AF%B9%E8%AF%9D%E4%B8%8E%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AE%A1%E7%90%86/">AI Harness 工程实战（二）：多轮对话与上下文管理</a></li>
+<li>本文：AI Harness 工程实战（三）：工具调用循环</li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%9B%9B%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E4%B8%8E%E9%87%8D%E8%AF%95/">AI Harness 工程实战（四）：结构化输出与重试</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%BA%94%E6%9D%83%E9%99%90%E4%B8%8E%E6%B2%99%E7%AE%B1/">AI Harness 工程实战（五）：权限与沙箱</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%85%AD%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/">AI Harness 工程实战（六）：可观测性</a></li>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%83%E5%A6%82%E4%BD%95%E8%AF%84%E6%B5%8B%E8%BF%99%E4%B8%AA-harness/">AI Harness 工程实战（七）：如何评测这个 harness</a></li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p>前两篇，模型能&quot;说话&quot;了，也能&quot;记住&quot;上下文了。但用户要的不是聊天机器人，而是能<strong>干活的 Agent</strong>：查天气、算数据、读写文件、调接口。这一篇是这个系列的分水岭——我们让模型自己决定&quot;调用什么工具、拿到结果、继续思考&quot;，一个最小的 Agent 就此诞生。</p>
+<p>核心就一个词：<strong>循环</strong>。</p>
+<h2 id="一场景让模型干活">一、场景：让模型&quot;干活&quot;</h2>
+<p>假设你的业务要做一个天气助手。用户问&quot;北京天气怎么样？&quot;，模型不会查天气——它只会生成文本。所以要让模型&quot;使用工具&quot;：模型输出&quot;我要调用 <code>get_weather</code>，参数是北京&quot;，harness 去执行这个函数，把结果喂回给模型，模型再组织成回答。</p>
+<p>这一步的工程难点不是函数本身，而是<strong>模型和代码之间的协议</strong>：模型怎么表达意图？结果怎么回传？循环什么时候停？</p>
+<h2 id="二朴素实现让模型输出-json自己解析">二、朴素实现：让模型输出 JSON，自己解析</h2>
+<p>最直觉的做法：在 prompt 里让模型输出一个 JSON 指定&quot;函数名 + 参数&quot;，然后手动解析执行：</p>
+<pre><code class="language-python">def naive_agent(question: str) -&gt; str:
+    prompt = f&quot;&quot;&quot;你是天气助手。需要查天气时，输出 JSON：
+{{&quot;tool&quot;: &quot;get_weather&quot;, &quot;arguments&quot;: {{&quot;city&quot;: &quot;北京&quot;}}}}
+问题：{question}&quot;&quot;&quot;
+    reply = client.chat([{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: prompt}])
+    call = json.loads(reply)                       # 祈祷它是合法 JSON
+    result = globals()[call[&quot;tool&quot;]](**call[&quot;arguments&quot;])
+    return result
+</code></pre>
+<p>本地演示能跑通，但它是&quot;赌运气&quot;的代码。</p>
+<h2 id="三它暴露了哪些问题">三、它暴露了哪些问题</h2>
+<ul>
+<li><strong>模型输出不稳定</strong>：模型可能给你 <code>```json</code> 围栏、前后夹带解释文字、甚至 JSON 损坏——<code>json.loads</code> 直接崩。</li>
+<li><strong>工具定义与实现重复</strong>：工具的&quot;使用说明&quot;写在 prompt 字符串里，实现写死在代码里，改参数要同步改两处。</li>
+<li><strong>结果回填没有约定</strong>：工具结果怎么回到模型手里？直接拼进下一轮 prompt？谁来拼？顺序怎么保证？</li>
+<li><strong>没有终止条件</strong>：模型可能反复要求调用工具，循环停不下来，钱烧完为止。</li>
+<li><strong>工具名写错就崩</strong>：<code>globals()[call[&quot;tool&quot;]]</code> 找不到键直接 <code>KeyError</code>。</li>
+</ul>
+<p>这些问题的本质是：<strong>模型和工具之间缺一层正式的协议和一个负责执行的主循环</strong>。</p>
+<h2 id="四工程化演进工具注册表--agent-主循环">四、工程化演进：工具注册表 + Agent 主循环</h2>
+<h3 id="1-工具注册表把函数升级成工具">1. 工具注册表：把&quot;函数&quot;升级成&quot;工具&quot;</h3>
+<p>用装饰器给函数加上名字、描述、参数 Schema（JSON Schema，OpenAI 风格）和权限声明：</p>
+<pre><code class="language-python">@tool(
+    name=&quot;get_weather&quot;,
+    description=&quot;查询指定城市的天气&quot;,
+    parameters={
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {&quot;city&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;城市名，如：北京&quot;}},
+        &quot;required&quot;: [&quot;city&quot;],
+    },
+)
+def get_weather(city: str) -&gt; str:
+    return f&quot;{city}：晴，28°C&quot;
+</code></pre>
+<p><code>ToolRegistry</code> 负责注册和按名字查找，schema 由装饰器统一生成，<strong>描述和实现不再各写各的</strong>：</p>
+<pre><code class="language-python">registry = ToolRegistry()
+registry.register(get_weather)
+schemas = registry.schemas()   # 直接作为 tools 参数发给模型
+</code></pre>
+<h3 id="2-agent-主循环感知--思考--行动">2. Agent 主循环：感知 → 思考 → 行动</h3>
+<p><code>Agent</code> 把会话、模型、工具串成一个循环：</p>
+<pre><code class="language-python">for step in range(1, self.max_steps + 1):
+    messages = trim_context(self.session, self.context_policy)
+    data = self.client.chat_completion(messages, tools=self.registry.schemas())
+    message = data[&quot;choices&quot;][0][&quot;message&quot;]
+    tool_calls = message.get(&quot;tool_calls&quot;) or []
+
+    if not tool_calls:
+        content = message.get(&quot;content&quot;) or &quot;&quot;
+        self.session.assistant(content)
+        return content
+
+    self.session.messages.append({          # 记录模型的调用意图
+        &quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: message.get(&quot;content&quot;),
+        &quot;tool_calls&quot;: tool_calls,
+    })
+    for call in tool_calls:
+        tool_impl = self.registry.get(call[&quot;function&quot;][&quot;name&quot;])
+        if tool_impl is None:
+            result = f&quot;错误：没有找到工具 {call['function']['name']}&quot;
+        else:
+            result = tool_impl.run(**json.loads(call[&quot;function&quot;][&quot;arguments&quot;]))
+        self.session.messages.append({
+            &quot;role&quot;: &quot;tool&quot;, &quot;tool_call_id&quot;: call[&quot;id&quot;], &quot;content&quot;: result,
+        })
+</code></pre>
+<p>几个关键设计：</p>
+<ul>
+<li><strong>原生 function calling 协议</strong>：这里用的是 DeepSeek 原生的 <code>tools</code> 参数，模型返回结构化的 <code>tool_calls</code>，比&quot;裸 JSON 约定&quot;可靠得多。上一篇讲的裸 JSON 是理解原理的入口，原生协议是生产选择。</li>
+<li><strong>工具结果作为 <code>tool</code> 消息回填</strong>：模型能&quot;看到&quot;调用结果，继续思考或修正。结果格式就是文本，天然兼容。</li>
+<li><strong>错误也是上下文</strong>：工具不存在、参数错误时，把错误文本回填给模型，让它自我修正——而不是让整个 agent 崩溃。</li>
+<li><strong><code>max_steps</code> 是硬边界</strong>：无论模型怎么绕，最多循环 N 步，防止死循环烧钱。</li>
+</ul>
+<h2 id="五为什么这样设计">五、为什么这样设计</h2>
+<ul>
+<li><strong>显式注册，不藏全局状态</strong>：装饰器只负责&quot;把函数包装成工具&quot;，注册必须显式调用——和上一篇 <code>Session</code> 的哲学一致，状态的所有者要清楚。</li>
+<li><strong>薄协议、厚循环</strong>：harness 不关心工具内部逻辑，只负责&quot;表达意图 → 执行 → 回填&quot;，工具本身由业务方提供。</li>
+<li><strong>一个已知的坑</strong>：上下文裁剪时，<code>tool</code> 消息必须跟在对应的 <code>tool_calls</code> 后面，裁剪如果拆散配对会导致 API 报错。生产环境裁剪要对&quot;调用-结果&quot;成对处理，本系列从简，先记住这个坑。</li>
+</ul>
+<h2 id="六小结">六、小结</h2>
+<p>本篇的收获：</p>
+<ol>
+<li>Agent 的本质是一个&quot;感知 → 思考 → 行动&quot;循环，harness 负责把循环跑对、跑稳、跑得有限。</li>
+<li>工具协议用原生 function calling（结构化 <code>tool_calls</code>），比裸 JSON 可靠。</li>
+<li>错误回填给模型 = 给模型自我修正的机会；<code>max_steps</code> 是烧钱的刹车。</li>
+</ol>
+<p>配套仓库当前在 <code>lesson-03</code> tag，代码见 <code>harness/tools.py</code> 和 <code>harness/agent.py</code>。</p>
+<p>下一篇，我们把&quot;模型输出&quot;变成&quot;可靠数据&quot;：<strong>结构化输出与重试</strong>——JSON 解析、校验、重试预算，让 harness 的输出可以放心交给业务。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

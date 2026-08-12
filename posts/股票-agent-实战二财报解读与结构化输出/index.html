@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>股票 Agent 实战（二）：财报解读与结构化输出 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一场景让-agent-解读财报">一、场景：让 agent 解读财报</a></li>
+    <li><a href="#二数据源选型同花顺财务摘要">二、数据源选型：同花顺财务摘要</a></li>
+    <li><a href="#三实现get_financial_summary-工具">三、实现：get_financial_summary 工具</a></li>
+    <li><a href="#四结构化输出outputschema--chat_json">四、结构化输出：OutputSchema + chat_json</a></li>
+    <li><a href="#五运行与验证">五、运行与验证</a></li>
+    <li><a href="#六小结">六、小结</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">股票 Agent 实战（二）：财报解读与结构化输出</h1>
+        </header>
+
+        <div class="page-content">
+            <blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/">股票 Agent 实战（一）：把行情变成工具</a></li>
+<li>本文：股票 Agent 实战（二）：财报解读与结构化输出</li>
+<li>下一篇：盯盘提醒（写作中）</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>📚 <strong>推荐阅读（前置知识）</strong></p>
+<ul>
+<li><a href="/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%9B%9B%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E4%B8%8E%E9%87%8D%E8%AF%95/">AI Harness 实战（四）：结构化输出与重试</a></li>
+</ul>
+</blockquote>
+<h2 id="前言">前言</h2>
+<p>第一课给 agent 装上了「行情」器官，能查到真实盘口和 K 线。这一课装第二个器官：<strong>财报</strong>。同时解决一个新问题：第一课的答案是自由文本，人看着舒服，但程序没法直接消费——「分析一下贵州茅台」和「自动生成持仓周报」之间，差的正是<strong>结构化输出</strong>。</p>
+<h2 id="一场景让-agent-解读财报">一、场景：让 agent 解读财报</h2>
+<p>目标：问「分析一下贵州茅台最近的财报」，agent 调财报工具取真实数据，然后给出一份<strong>格式固定、字段可解析</strong>的分析结论。</p>
+<p>自由文本回答的问题：</p>
+<ul>
+<li><strong>不可程序消费</strong>：后续要做持仓周报、告警通知，都得解析自然语言，脆弱；</li>
+<li><strong>不可评测</strong>：harness 第 7 课讲过，eval 需要「回答命中期望」的稳定格式；</li>
+<li><strong>不可靠</strong>：同一问题两次回答结构不一样，前端没法渲染。</li>
+</ul>
+<h2 id="二数据源选型同花顺财务摘要">二、数据源选型：同花顺财务摘要</h2>
+<p>候选接口实测对比：</p>
+<table>
+	<thead>
+			<tr>
+					<th>接口</th>
+					<th>特点</th>
+					<th>结论</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>stock_financial_abstract_ths</code>（同花顺）</td>
+					<td>按报告期返回季度/年度，关键指标齐全：营收、净利、同比、EPS、毛利率、ROE、资产负债率等</td>
+					<td>✅ 选用</td>
+			</tr>
+			<tr>
+					<td><code>stock_financial_analysis_indicator</code>（新浪）</td>
+					<td>指标最细（60+ 字段），但只有年报、字段偏旧</td>
+					<td>⏸ 留作扩展</td>
+			</tr>
+	</tbody>
+</table>
+<p>工具只保留对分析最关键的 13 个字段，避免把模型撑晕：</p>
+<pre><code class="language-text">报告期 / 营业总收入 / 营业总收入同比增长率 / 净利润 / 净利润同比增长率 /
+扣非净利润 / 基本每股收益 / 每股净资产 / 每股经营现金流 /
+销售毛利率 / 销售净利率 / 净资产收益率 / 资产负债率
+</code></pre>
+<h2 id="三实现get_financial_summary-工具">三、实现：get_financial_summary 工具</h2>
+<p>与第一课完全同构：数据源层加一个函数，工具层包一层：</p>
+<pre><code class="language-python">@tool(
+    name=&quot;get_financial_summary&quot;,
+    description=&quot;获取 A 股个股最近 N 个报告期的财务摘要：营业收入、净利润及同比增速、&quot;
+                &quot;扣非净利润、基本每股收益、每股经营现金流、毛利率、净利率、&quot;
+                &quot;净资产收益率(ROE)、资产负债率等，用于基本面与财报分析。&quot;,
+    parameters={
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+            &quot;symbol&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;6 位 A 股股票代码，例如 '600519' 是贵州茅台&quot;},
+            &quot;periods&quot;: {&quot;type&quot;: &quot;integer&quot;, &quot;description&quot;: &quot;最近 N 个报告期，默认 4，最多 8&quot;}
+        },
+        &quot;required&quot;: [&quot;symbol&quot;],
+    },
+)
+def get_financial_summary(symbol: str, periods: int = 4) -&gt; list[dict]:
+    return data_source.financial_summary(symbol, periods)
+</code></pre>
+<h2 id="四结构化输出outputschema--chat_json">四、结构化输出：OutputSchema + chat_json</h2>
+<p>这就是 harness 第 4 课 <code>OutputSchema</code> / <code>chat_json</code> 的实战用法。思路是<strong>两阶段</strong>：</p>
+<ol>
+<li>第一阶段：agent 自由调研，用工具把真实财报数据收进对话；</li>
+<li>第二阶段：把整段对话交给 <code>chat_json</code>，强制模型只输出符合 Schema 的 JSON，不合规就带着错误信息重试。</li>
+</ol>
+<pre><code class="language-python">ANALYSIS_SCHEMA = OutputSchema(
+    fields={
+        &quot;summary&quot;: as_str,       # 一句话结论
+        &quot;key_figures&quot;: as_list,  # 关键数据点数组
+        &quot;risk_flags&quot;: as_list,   # 风险点数组
+        &quot;verdict&quot;: as_str,       # 看多 / 看空 / 中性
+    },
+    required=[&quot;summary&quot;, &quot;key_figures&quot;, &quot;risk_flags&quot;, &quot;verdict&quot;],
+)
+
+# 第二阶段：结构化结论
+convo = agent.session.to_messages()
+convo.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: analysis_prompt(question)})
+result = chat_json(agent.client, convo, ANALYSIS_SCHEMA)
+</code></pre>
+<p><code>verdict</code> 只允许三个固定取值，<code>key_figures</code> / <code>risk_flags</code> 必须是数组——这些约束让输出天生可渲染、可入库、可评测。</p>
+<h2 id="五运行与验证">五、运行与验证</h2>
+<pre><code class="language-bash">conda activate stock-agent   # 每次开新终端先切换环境
+python stock-agent/analyze.py &quot;分析一下贵州茅台最近的财报&quot;
+</code></pre>
+<p>真实输出示例（数据来自同花顺财务摘要）：</p>
+<pre><code class="language-json">{
+  &quot;summary&quot;: &quot;贵州茅台基本面依然稳健，但增速明显放缓，2025年出现负增长，2026年一季度净利润增速仅1.47%，处于低速增长阶段。&quot;,
+  &quot;key_figures&quot;: [
+    &quot;2026Q1 营收 547.03 亿，同比 +6.34%&quot;,
+    &quot;2026Q1 净利润 272.43 亿，同比 +1.47%&quot;,
+    &quot;2025 全年营收 1720.54 亿，同比 -1.20%&quot;,
+    &quot;2025 全年净利润 823.20 亿，同比 -4.53%&quot;,
+    &quot;2026Q1 毛利率 89.76%，净利率 52.22%&quot;,
+    &quot;2026Q1 ROE 10.57%，资产负债率 12.12%&quot;
+  ],
+  &quot;risk_flags&quot;: [
+    &quot;2025年全年营收和净利润均出现负增长&quot;,
+    &quot;2026Q1净利润增速（1.47%）显著低于营收增速（6.34%），利润端承压&quot;
+  ],
+  &quot;verdict&quot;: &quot;中性&quot;
+}
+</code></pre>
+<p>离线测试从第一课的 5 项增加到 7 项，新增：财报工具归一化、<code>chat_json</code> + Schema 全链路（用 FakeLLM 离线验证结构化输出）。</p>
+<h2 id="六小结">六、小结</h2>
+<p>第二课的收获：</p>
+<ol>
+<li><strong>财报也是工具</strong>——数据源选型要看「返回节奏」和「字段完整度」，同构地加进工具层；</li>
+<li><strong>结构化输出让 agent 可消费</strong>——<code>OutputSchema</code> 把自由文本变成固定 JSON，为后续盯盘告警、持仓周报铺路；</li>
+<li><strong>两阶段模式</strong>——先自由调研取数，再强制结构化总结，比一步到位稳定得多。</li>
+</ol>
+<p>下一步：<strong>盯盘提醒</strong>——按涨跌幅/价格条件触发通知，把 agent 从「问答」推进到「主动」。</p>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+	<channel>
+		<title>开源 on Liwenqi&#39;s Blog</title>
+		<link>https://liwenqikeep.github.io/tags/%E5%BC%80%E6%BA%90/</link>
+		<description>Recent content in 开源 on Liwenqi&#39;s Blog</description>
+		<generator>Hugo</generator>
+		<language>zh-cn</language>
+		
+		
+		
+			<copyright>Liwenqi</copyright>
+		
+		
+			<lastBuildDate>Sat, 14 May 2022 00:00:00 +0000</lastBuildDate>
+		
+			<atom:link href="https://liwenqikeep.github.io/tags/%E5%BC%80%E6%BA%90/index.xml" rel="self" type="application/rss+xml" />
+			<item>
+				<title>系统架构设计方法论（三）：技术选型与决策</title>
+				<link>https://liwenqikeep.github.io/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%B8%89%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%E5%86%B3%E7%AD%96/</link>
+				<pubDate>Sat, 14 May 2022 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%B8%89%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%E5%86%B3%E7%AD%96/</guid>
+				<description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;&#xA;&lt;p&gt;技术选型是最容易被低估的架构决策。很多系统不是被业务难死的，而是被选型拖死的：选了个&amp;quot;很潮&amp;quot;但不成熟的技术，踩坑三个月；或者&amp;quot;大家都在用&amp;quot;所以跟着选，业务形态根本对不上。&lt;/p&gt;&#xA;&lt;p&gt;选型的本质是&lt;strong&gt;用可验证的证据做决策&lt;/strong&gt;，而不是凭感觉。本文给出一套可复用的选型方法论：前置条件、评估维度、决策框架和落地案例。&lt;/p&gt;</description>
+			</item>
+	</channel>
+</rss>

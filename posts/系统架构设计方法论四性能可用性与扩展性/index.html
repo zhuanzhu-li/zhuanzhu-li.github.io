@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>系统架构设计方法论（四）：性能、可用性与扩展性 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一性能方法论">一、性能方法论</a>
+      <ul>
+        <li><a href="#11-先定义性能目标">1.1 先定义性能目标</a></li>
+        <li><a href="#12-容量规划">1.2 容量规划</a></li>
+        <li><a href="#13-性能设计手段">1.3 性能设计手段</a></li>
+        <li><a href="#14-定位问题">1.4 定位问题</a></li>
+      </ul>
+    </li>
+    <li><a href="#二可用性方法论">二、可用性方法论</a>
+      <ul>
+        <li><a href="#21-定义可用性">2.1 定义可用性</a></li>
+        <li><a href="#22-设计手段">2.2 设计手段</a></li>
+        <li><a href="#23-故障模型">2.3 故障模型</a></li>
+      </ul>
+    </li>
+    <li><a href="#三扩展性方法论">三、扩展性方法论</a>
+      <ul>
+        <li><a href="#31-水平扩展的前提无状态">3.1 水平扩展的前提：无状态</a></li>
+        <li><a href="#32-数据扩展">3.2 数据扩展</a></li>
+        <li><a href="#33-服务扩展">3.3 服务扩展</a></li>
+      </ul>
+    </li>
+    <li><a href="#四三者的权衡">四、三者的权衡</a></li>
+    <li><a href="#五落地案例秒杀系统设计串联">五、落地案例：秒杀系统设计串联</a></li>
+    <li><a href="#六面试考察点与自查清单">六、面试考察点与自查清单</a></li>
+    <li><a href="#相关阅读">相关阅读</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">系统架构设计方法论（四）：性能、可用性与扩展性</h1>
+        </header>
+
+        <div class="page-content">
+            <h2 id="前言">前言</h2>
+<p>性能、可用性、扩展性，是系统架构面试里出现频率最高的三个词，也是线上事故最集中的三个来源。三者看似独立，实际是同一个问题的三个侧面：<strong>当压力、故障、增长到来时，系统如何应对</strong>。</p>
+<p>这篇文章给出一套方法论框架，不深入某个具体机制（那些在分布式、支付、Spring Cloud 系列里都有），而是讲清楚&quot;遇到这类问题，思考路径是什么&quot;。</p>
+<blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%B8%80%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E8%BE%B9%E7%95%8C%E5%88%92%E5%88%86/">需求分析与边界划分</a></li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%8C%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B8%8E%E5%88%86%E5%B1%82/">模块化与分层</a></li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%B8%89%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%E5%86%B3%E7%AD%96/">技术选型与决策</a></li>
+<li>本文：性能、可用性与扩展性</li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%94%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B%E4%B8%8E%E6%B2%BB%E7%90%86/">架构演进与治理</a></li>
+</ul>
+</blockquote>
+<h2 id="一性能方法论">一、性能方法论</h2>
+<h3 id="11-先定义性能目标">1.1 先定义性能目标</h3>
+<p>没有目标的性能优化都是玄学。目标包括：<strong>吞吐（QPS/TPS）、延迟（TP99/TP95）、资源占用（CPU/内存）</strong>，且要放在具体场景里（读多还是写多、热数据比例）。</p>
+<h3 id="12-容量规划">1.2 容量规划</h3>
+<pre><code>容量规划流程：
+1. 流量模型估算（系列第一篇的方法）
+2. 单机基准：压测出单实例能扛多少 QPS
+3. 实例数 = 峰值 QPS / 单机 QPS × 冗余系数（通常 2）
+4. 加上增长预期，留出演进空间
+</code></pre>
+<p>压测数据是唯一可信的输入，基准没跑出来之前，所有&quot;应该够&quot;都是猜测。</p>
+<h3 id="13-性能设计手段">1.3 性能设计手段</h3>
+<p>按性价比排序的常用手段：</p>
+<ol>
+<li><strong>缓存</strong>：读多写少场景的第一选择。<a href="/posts/redis%E4%BA%94%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E6%88%98/">Redis 缓存设计与实战</a>讲了缓存穿透、击穿、雪崩的完整解法</li>
+<li><strong>索引</strong>：查询慢先看执行计划。<a href="/posts/mysql%E4%BA%8C%E7%B4%A2%E5%BC%95%E5%8E%9F%E7%90%86%E4%B8%8E%E4%BC%98%E5%8C%96/">MySQL 索引原理与优化</a>是最常用的性能武器</li>
+<li><strong>异步化</strong>：非核心链路异步化，削峰填谷</li>
+<li><strong>读写分离</strong>：读压力大时主从分离</li>
+</ol>
+<h3 id="14-定位问题">1.4 定位问题</h3>
+<p>性能问题定位靠数据不靠猜：全链路追踪（<a href="/posts/spring-cloud-%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AAsleuth--zipkin-%E5%85%A8%E9%93%BE%E8%B7%AF%E7%9B%91%E6%8E%A7/">Sleuth + Zipkin</a>、<a href="/posts/%E6%94%AF%E4%BB%98%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E5%8D%81%E6%94%AF%E4%BB%98%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/">支付可观测性</a>)把慢请求的每一跳打开，先找到瓶颈在哪一层，再动手。</p>
+<h2 id="二可用性方法论">二、可用性方法论</h2>
+<h3 id="21-定义可用性">2.1 定义可用性</h3>
+<p>可用性 = 服务正常时间 / 总时间。99.9% 意味着全年最多 8.8 小时不可用，99.99% 是 52.6 分钟。<strong>SLA 一旦定义，故障处理和容量规划都有标准。</strong></p>
+<h3 id="22-设计手段">2.2 设计手段</h3>
+<pre><code>可用性三板斧：
+1. 冗余 + 无状态：多副本部署，任意节点可替换
+   （见分布式设计思想：无状态设计）
+2. 故障隔离 + 降级：把故障圈在局部，非核心功能让路
+   （降级熔断限流：Sentinel）
+3. 容灾 + 演练：预案不是写了就有用，要定期演练
+   （支付高可用与容灾）
+</code></pre>
+<p><strong>降级、熔断、限流是三个不同动作</strong>，面试高频考点：</p>
+<table>
+	<thead>
+			<tr>
+					<th>动作</th>
+					<th>触发</th>
+					<th>目的</th>
+					<th>例子</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>限流</td>
+					<td>流量超阈值</td>
+					<td>保护自己</td>
+					<td>每秒放 1000 个请求</td>
+			</tr>
+			<tr>
+					<td>熔断</td>
+					<td>下游故障率高</td>
+					<td>保护下游</td>
+					<td>失败率 &gt; 50% 直接拒绝</td>
+			</tr>
+			<tr>
+					<td>降级</td>
+					<td>资源不足/依赖失败</td>
+					<td>保住核心</td>
+					<td>推荐位返回空列表</td>
+			</tr>
+	</tbody>
+</table>
+<p>具体实现见<a href="/posts/spring-cloud-%E7%86%94%E6%96%AD%E9%99%90%E6%B5%81sentinel-%E6%B5%81%E9%87%8F%E6%B2%BB%E7%90%86/">Sentinel 流量治理</a>和<a href="/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%BA%94%E9%AB%98%E5%8F%AF%E7%94%A8%E4%B8%8E%E6%B5%81%E9%87%8F%E6%B2%BB%E7%90%86/">分布式系统高可用与流量治理</a>。</p>
+<h3 id="23-故障模型">2.3 故障模型</h3>
+<p>设计时先假设一切都会失败：网络会断、机器会宕、消息会丢、调用会超时。围绕这些假设做冗余、重试、幂等、兜底——这正是<a href="/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%B8%80%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3%E4%B8%8E%E6%96%B9%E6%B3%95%E8%AE%BA/">分布式系统设计思想与方法论</a>的核心。</p>
+<h2 id="三扩展性方法论">三、扩展性方法论</h2>
+<h3 id="31-水平扩展的前提无状态">3.1 水平扩展的前提：无状态</h3>
+<p>无状态是扩展性的地基：节点不保存用户状态，请求打到任意节点结果一样，才能随便加机器。状态交给共享存储（DB/Redis）。</p>
+<h3 id="32-数据扩展">3.2 数据扩展</h3>
+<p>数据量增长后，单库单表扛不住：</p>
+<ul>
+<li><strong>读写分离</strong>：读压力与写压力分开</li>
+<li><strong>分库分表</strong>：按维度（用户 ID、订单 ID）分片</li>
+<li><strong>缓存</strong>：热点数据前置</li>
+</ul>
+<p>分片带来分布式问题（跨片事务、聚合查询），所以分片是最后手段，先用缓存和索引。</p>
+<h3 id="33-服务扩展">3.3 服务扩展</h3>
+<p>服务层面两种扩展方向：</p>
+<pre><code>垂直扩展：加 CPU/内存 —— 有物理上限
+水平扩展：加实例 —— 配合负载均衡，无上限（有状态是障碍）
+
+服务拆分后，消息队列承担削峰填谷：
+上游 → MQ → 下游按消费能力处理
+（见 Kafka/RabbitMQ 系列）
+</code></pre>
+<p>云原生时代，扩展性交给平台：<a href="/posts/k8s%E4%B8%80%E4%BB%8E%E9%9B%B6%E8%AE%A4%E8%AF%86-kubernetes-%E6%9E%B6%E6%9E%84%E4%B8%8E%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5/">K8s 架构与核心概念</a>的 HPA 让实例数跟随负载自动伸缩。</p>
+<h2 id="四三者的权衡">四、三者的权衡</h2>
+<p>三个质量属性经常互相打架：</p>
+<ul>
+<li><strong>性能 vs 一致性</strong>：CAP 里的一致性-可用性权衡，<a href="/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%BA%8C%E5%88%86%E5%B8%83%E5%BC%8F%E7%90%86%E8%AE%BA-cap/base/%E4%B8%80%E8%87%B4%E6%80%A7/">分布式理论 CAP/BASE/一致性</a>有完整论述</li>
+<li><strong>可用性 vs 一致性</strong>：强一致（同步复制）会牺牲可用性和延迟，最终一致（异步）换可用性</li>
+<li><strong>扩展性 vs 复杂度</strong>：拆得越细扩展越灵活，但事务、追踪、运维复杂度指数上升</li>
+</ul>
+<p><strong>成本三角</strong>是终极约束：性能、成本、复杂度，最多同时优化两个。架构师的职责不是&quot;全部都要&quot;，而是根据业务目标（系列第一篇）明确优先序。</p>
+<h2 id="五落地案例秒杀系统设计串联">五、落地案例：秒杀系统设计串联</h2>
+<p>把三个方法论串起来的标准面试题——设计一个秒杀系统：</p>
+<pre><code>1. 性能：提前把库存预热到 Redis，读请求走缓存
+2. 限流：网关按用户/IP/QPS 限流，挡掉大部分无效请求
+3. 削峰：下单请求进 MQ，异步消费落库
+4. 幂等：同一用户重复提交只生效一次（唯一键/状态机）
+5. 降级：非核心功能（排行榜、推荐）让路
+6. 扩展：无状态服务水平扩容，Redis/DB 按读压力分片
+</code></pre>
+<p>每一步都有对应的方法论依据，这就是&quot;高并发系统设计&quot;的标准答题框架。支付场景的完整落地可看<a href="/posts/%E6%94%AF%E4%BB%98%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B9%9D%E6%94%AF%E4%BB%98%E9%AB%98%E5%8F%AF%E7%94%A8%E4%B8%8E%E5%AE%B9%E7%81%BE/">支付高可用与容灾</a>。</p>
+<h2 id="六面试考察点与自查清单">六、面试考察点与自查清单</h2>
+<p><strong>高频面试题：</strong></p>
+<ol>
+<li>&ldquo;设计一个高并发秒杀系统&rdquo;——缓存、限流、削峰、幂等、降级、扩展六板斧</li>
+<li>&ldquo;缓存一致性怎么保证？&quot;——Cache Aside、删除缓存、最终一致（<a href="/posts/redis%E4%BA%94%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E6%88%98/">Redis 缓存设计</a>)</li>
+<li>&ldquo;熔断和降级的区别？&quot;——熔断保护下游、降级保护核心业务，触发条件和目标都不同</li>
+<li>&ldquo;什么时候该分库分表？&quot;——容量/写入/查询瓶颈，且缓存、索引、读写分离都到极限</li>
+</ol>
+<p><strong>自查清单：</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> 能说清系统当前容量：峰值 QPS、单机能力、冗余系数</li>
+<li><input disabled="" type="checkbox"> 每个核心链路都有故障预案</li>
+<li><input disabled="" type="checkbox"> 能画出系统的扩展路径（无状态化 → 分片 → 拆分）</li>
+<li><input disabled="" type="checkbox"> 能说出三个质量属性在本系统的优先级和理由</li>
+</ul>
+<h2 id="相关阅读">相关阅读</h2>
+<ul>
+<li><a href="/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%B8%80%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3%E4%B8%8E%E6%96%B9%E6%B3%95%E8%AE%BA/">分布式系统设计（一）：设计思想与方法论</a></li>
+<li><a href="/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%BA%8C%E5%88%86%E5%B8%83%E5%BC%8F%E7%90%86%E8%AE%BA-cap/base/%E4%B8%80%E8%87%B4%E6%80%A7/">分布式系统设计（二）：分布式理论 CAP/BASE/一致性</a></li>
+<li><a href="/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%BA%94%E9%AB%98%E5%8F%AF%E7%94%A8%E4%B8%8E%E6%B5%81%E9%87%8F%E6%B2%BB%E7%90%86/">分布式系统设计（五）：高可用与流量治理</a></li>
+<li><a href="/posts/%E6%94%AF%E4%BB%98%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B9%9D%E6%94%AF%E4%BB%98%E9%AB%98%E5%8F%AF%E7%94%A8%E4%B8%8E%E5%AE%B9%E7%81%BE/">支付系统架构设计（九）：支付高可用与容灾</a></li>
+<li><a href="/posts/spring-cloud-%E7%86%94%E6%96%AD%E9%99%90%E6%B5%81sentinel-%E6%B5%81%E9%87%8F%E6%B2%BB%E7%90%86/">Spring Cloud 熔断限流：Sentinel 流量治理</a></li>
+<li><a href="/posts/k8s%E4%B8%80%E4%BB%8E%E9%9B%B6%E8%AE%A4%E8%AF%86-kubernetes-%E6%9E%B6%E6%9E%84%E4%B8%8E%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5/">K8s（一）：从零认识 Kubernetes — 架构与核心概念</a></li>
+<li>上一篇：<a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%B8%89%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%E5%86%B3%E7%AD%96/">技术选型与决策</a></li>
+<li>下一篇：<a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%94%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B%E4%B8%8E%E6%B2%BB%E7%90%86/">架构演进与治理</a></li>
+</ul>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

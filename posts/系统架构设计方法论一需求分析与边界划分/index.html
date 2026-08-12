@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开发工程师 | 技术分享">
+    <title>系统架构设计方法论（一）：需求分析与边界划分 - Liwenqi&#39;s Blog</title>
+    
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
+    
+</head>
+<body>
+    
+    <header class="header">
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/img/avatar.png" alt="Liwenqi&#39;s Blog" class="nav-avatar">
+                <span class="nav-title">Liwenqi&#39;s Blog</span>
+            </a>
+            
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="nav-link ">首页</a></li>
+                <li><a href="/post/" class="nav-link active">文章</a></li>
+                <li><a href="/about/" class="nav-link">关于</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+    
+    
+    <main class="main">
+        <div class="container">
+            
+<div class="post-layout">
+    <aside class="article-toc" id="article-toc">
+    <div class="toc-header">
+        <span class="toc-title">目录</span>
+    </div>
+    <nav id="TableOfContents" class="toc-nav">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#一从业务目标推导架构属性">一、从业务目标推导架构属性</a></li>
+    <li><a href="#二需求分析方法论">二、需求分析方法论</a>
+      <ul>
+        <li><a href="#21-功能需求与非功能需求">2.1 功能需求与非功能需求</a></li>
+        <li><a href="#22-场景与流量模型">2.2 场景与流量模型</a></li>
+        <li><a href="#23-约束识别">2.3 约束识别</a></li>
+      </ul>
+    </li>
+    <li><a href="#三边界划分">三、边界划分</a>
+      <ul>
+        <li><a href="#31-从问题域到限界上下文">3.1 从问题域到限界上下文</a></li>
+        <li><a href="#32-系统边界--模块边界--服务边界">3.2 系统边界 / 模块边界 / 服务边界</a></li>
+        <li><a href="#33-边界划分的实践准则">3.3 边界划分的实践准则</a></li>
+      </ul>
+    </li>
+    <li><a href="#四权衡取舍">四、权衡取舍</a></li>
+    <li><a href="#五落地案例支付系统的域划分">五、落地案例：支付系统的域划分</a></li>
+    <li><a href="#六面试考察点与自查清单">六、面试考察点与自查清单</a></li>
+    <li><a href="#相关阅读">相关阅读</a></li>
+  </ul>
+</nav>
+    </nav>
+    <div class="toc-footer">
+        <a href="#" class="back-to-top" id="back-to-top">
+            <span class="back-to-top-icon">↑</span>
+            <span class="back-to-top-text">返回顶部</span>
+        </a>
+    </div>
+</aside>
+    
+    <article class="page">
+        <header class="page-header">
+            <h1 class="page-title">系统架构设计方法论（一）：需求分析与边界划分</h1>
+        </header>
+
+        <div class="page-content">
+            <h2 id="前言">前言</h2>
+<p>架构师最常犯的错误，不是方案设计得不够精妙，而是把方案做在了错误的问题上。需求还没厘清就开始选型、画架构图，等系统上线才发现：QPS 估错了、边界划错了、非功能需求根本没定义过。返工的成本，往往是初版设计成本的十倍。</p>
+<p>本文是&quot;系统架构设计方法论&quot;系列的第一篇，聚焦架构设计的起点——<strong>需求分析与边界划分</strong>。只有把&quot;做什么、做到什么程度、边界在哪里&quot;想清楚，后续的模块化、选型、质量属性设计才有依据。</p>
+<blockquote>
+<p><strong>系列导航</strong></p>
+<ul>
+<li>本文：需求分析与边界划分</li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%8C%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B8%8E%E5%88%86%E5%B1%82/">模块化与分层</a></li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%B8%89%E6%8A%80%E6%9C%AF%E9%80%89%E5%9E%8B%E4%B8%8E%E5%86%B3%E7%AD%96/">技术选型与决策</a></li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E5%9B%9B%E6%80%A7%E8%83%BD%E5%8F%AF%E7%94%A8%E6%80%A7%E4%B8%8E%E6%89%A9%E5%B1%95%E6%80%A7/">性能、可用性与扩展性</a></li>
+<li><a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%94%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B%E4%B8%8E%E6%B2%BB%E7%90%86/">架构演进与治理</a></li>
+</ul>
+</blockquote>
+<h2 id="一从业务目标推导架构属性">一、从业务目标推导架构属性</h2>
+<p>架构设计的本质是<strong>在约束下做权衡</strong>，而权衡的依据来自业务目标。需求分析的第一步，是把业务目标翻译成可量化的架构属性。</p>
+<table>
+	<thead>
+			<tr>
+					<th>业务目标</th>
+					<th>架构属性</th>
+					<th>典型量化指标</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>支撑大促峰值</td>
+					<td>性能/扩展性</td>
+					<td>峰值 QPS、TP99 延迟</td>
+			</tr>
+			<tr>
+					<td>交易不能出错</td>
+					<td>一致性/可靠性</td>
+					<td>数据不一致率、资金差错率</td>
+			</tr>
+			<tr>
+					<td>停机即损失</td>
+					<td>可用性</td>
+					<td>SLA 99.9%、RTO/RPO</td>
+			</tr>
+			<tr>
+					<td>快速试错上线</td>
+					<td>可维护性/演进性</td>
+					<td>发版频率、需求交付周期</td>
+			</tr>
+			<tr>
+					<td>控制成本</td>
+					<td>成本效益</td>
+					<td>单请求成本、资源利用率</td>
+			</tr>
+	</tbody>
+</table>
+<p>关键动作是<strong>显式化</strong>：把&quot;系统要稳定&quot;这种口号，变成&quot;可用性 99.9%，全年停机不超过 8.8 小时；核心链路 TP99 &lt; 200ms&quot;这样的指标。指标一旦显式，架构取舍就有了解题方向。</p>
+<h2 id="二需求分析方法论">二、需求分析方法论</h2>
+<h3 id="21-功能需求与非功能需求">2.1 功能需求与非功能需求</h3>
+<p>功能需求决定系统&quot;做什么&quot;，非功能需求（NFR）决定系统&quot;做到什么程度&quot;。后者才是架构设计的真正输入。</p>
+<p><strong>NFR 显式化的例子：</strong></p>
+<table>
+	<thead>
+			<tr>
+					<th>模糊描述</th>
+					<th>显式化后</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>系统要快</td>
+					<td>核心接口 TP99 &lt; 200ms，P95 &lt; 100ms</td>
+			</tr>
+			<tr>
+					<td>系统要稳</td>
+					<td>可用性 ≥ 99.9%，RTO &lt; 30min，RPO &lt; 5min</td>
+			</tr>
+			<tr>
+					<td>数据不能丢</td>
+					<td>消息投递可靠性 ≥ 99.99%，落库后不丢</td>
+			</tr>
+			<tr>
+					<td>要能撑住活动</td>
+					<td>预估峰值 5000 QPS，支持 2 倍余量弹性</td>
+			</tr>
+	</tbody>
+</table>
+<p>注意 NFR 之间会互相打架（一致性 vs 可用性、延迟 vs 吞吐），显式化的意义在于让冲突暴露在设计之前，而不是上线之后。</p>
+<h3 id="22-场景与流量模型">2.2 场景与流量模型</h3>
+<p>有经验的架构师会先画流量模型再画架构图：</p>
+<pre><code>每日 UV 100万，人均 20 次请求 → 日请求 2000万
+业务集中在 2 小时晚高峰 → 峰值 = 2000万 / 7200s × 集中系数 2 ≈ 5555 QPS
+读写比 10:1 → 读 5000 QPS，写 500 QPS
+单条数据 1KB → 日新增 500G，一年 180T
+</code></pre>
+<p>从流量模型能直接推导出：需不需要缓存、需不需要分库分表、需不需要消息队列削峰、用多少实例。这套估算在面试&quot;设计一个高并发系统&quot;时也是标准开场。</p>
+<h3 id="23-约束识别">2.3 约束识别</h3>
+<p>架构设计不是白纸作画，约束必须前置：</p>
+<ul>
+<li><strong>成本约束</strong>：服务器预算、云资源上限</li>
+<li><strong>团队约束</strong>：团队规模、技术栈熟悉度、排期</li>
+<li><strong>时间约束</strong>：上线时间窗口、里程碑</li>
+<li><strong>合规约束</strong>：数据安全、审计、监管要求（支付系统尤甚）</li>
+</ul>
+<p>约束不识别，方案再好也落不了地。</p>
+<h2 id="三边界划分">三、边界划分</h2>
+<h3 id="31-从问题域到限界上下文">3.1 从问题域到限界上下文</h3>
+<p>边界划分的第一层是<strong>业务域</strong>。用领域驱动设计（DDD）的话说，就是把问题域切成若干限界上下文（Bounded Context），每个上下文有自己的模型语言，上下文之间通过明确接口协作。</p>
+<pre><code>┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  客户域      │    │  交易域      │    │  履约域      │
+│  Customer   │───▶│  Order      │───▶│  Fulfillment│
+└─────────────┘    └─────────────┘    └─────────────┘
+       │                  │                   │
+       ▼                  ▼                   ▼
+┌─────────────────────────────────────────────────┐
+│              共享内核 / 公共能力                    │
+└─────────────────────────────────────────────────┘
+</code></pre>
+<p>边界划分的信号不是&quot;好不好看&quot;，而是<strong>变化频率、团队结构、故障隔离、扩展维度</strong>：</p>
+<table>
+	<thead>
+			<tr>
+					<th>划分信号</th>
+					<th>说明</th>
+					<th>例子</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>变化频率</td>
+					<td>变化节奏不同的部分分开</td>
+					<td>商品模型稳定，营销规则频繁变</td>
+			</tr>
+			<tr>
+					<td>团队结构</td>
+					<td>康威定律：系统结构跟随沟通结构</td>
+					<td>支付组、渠道组、对账组</td>
+			</tr>
+			<tr>
+					<td>故障隔离</td>
+					<td>一个挂不能带崩另一个</td>
+					<td>风控服务不能拖垮支付主链路</td>
+			</tr>
+			<tr>
+					<td>扩展维度</td>
+					<td>扩容单位不同则分开</td>
+					<td>读多写少的部分独立扩缓存</td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="32-系统边界--模块边界--服务边界">3.2 系统边界 / 模块边界 / 服务边界</h3>
+<p>三个边界是不同粒度的同一问题：</p>
+<ul>
+<li><strong>系统边界</strong>：对外提供什么能力，输入输出契约是什么</li>
+<li><strong>模块边界</strong>：代码层如何组织，依赖方向如何约束</li>
+<li><strong>服务边界</strong>：运行时如何部署、如何隔离故障</li>
+</ul>
+<p>很多团队的问题在于<strong>跳级</strong>：还没理清模块边界就先拆服务，结果服务之间循环调用，比单体更乱。</p>
+<h3 id="33-边界划分的实践准则">3.3 边界划分的实践准则</h3>
+<ol>
+<li>先按业务能力切，不按技术切（&ldquo;订单服务&quot;而不是&quot;数据库服务&rdquo;）</li>
+<li>边界两侧用契约通信，不共享内部表结构</li>
+<li>跨边界的操作要么事务化，要么事件化，不搞隐式耦合</li>
+<li>不确定的边界先合并，等变化信号出现再拆</li>
+</ol>
+<h2 id="四权衡取舍">四、权衡取舍</h2>
+<p>边界划分的核心权衡是<strong>粗与细</strong>：</p>
+<ul>
+<li>边界过粗 → 模块互相渗透，改一处崩一片，团队互相踩脚</li>
+<li>边界过细 → 分布式复杂度爆炸：事务、一致性、链路追踪、部署成本全上来</li>
+</ul>
+<p>更聪明的做法是<strong>演进式划分</strong>：单体起步、模块内聚，当&quot;变化频率差异 + 团队规模 + 故障影响&quot;三个信号同时出现时再拆。拆服务是手段不是目的。</p>
+<p>另一个权衡是<strong>需求确定性</strong>：需求模糊时先做薄边界、快速验证，而不是一步到位画完整套领域模型。</p>
+<h2 id="五落地案例支付系统的域划分">五、落地案例：支付系统的域划分</h2>
+<p>支付系统是边界划分的教科书案例。回顾<a href="/posts/%E6%94%AF%E4%BB%98%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%80%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84%E6%A6%82%E8%A7%88/">支付系统架构设计（一）：整体架构概览</a>，支付系统按业务域分为支付、退款、签约/代扣、查询，再按能力分为账务、渠道、风控、对账。</p>
+<p>其中最关键的设计决策是<strong>支付与账务分离</strong>：支付订单关心&quot;这笔支付成没成&quot;，资金账户关心&quot;钱记对没记对&quot;，两者变化频率和故障影响完全不同，必须拆开。更底层的建模见<a href="/posts/%E6%94%AF%E4%BB%98%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%BA%8C%E6%94%AF%E4%BB%98%E6%A0%B8%E5%BF%83%E9%A2%86%E5%9F%9F%E5%BB%BA%E6%A8%A1ddd/">支付核心领域建模（DDD）</a>，那里对限界上下文和聚合根有完整展开。</p>
+<p>另一个案例是 WebGIS 项目：空间数据的读写、地图服务、业务查询属于不同的变化维度，<a href="/posts/java-webgis-%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97%E4%B8%80%E6%A6%82%E8%BF%B0%E4%B8%8E%E6%8A%80%E6%9C%AF%E6%A0%88%E9%80%89%E5%9E%8B/">WebGIS 概述与技术栈选型</a>就是从业务边界出发推导技术栈的过程。</p>
+<h2 id="六面试考察点与自查清单">六、面试考察点与自查清单</h2>
+<p><strong>高频面试题：</strong></p>
+<ol>
+<li>&ldquo;给你一个系统，你怎么做容量估算？&quot;——流量模型 → 峰值 QPS → 资源推导</li>
+<li>&ldquo;这个服务该不该拆？&quot;——变化频率、团队、故障隔离、扩展维度四信号</li>
+<li>&ldquo;非功能需求怎么落地到设计？&quot;——NFR 显式化 → 架构属性 → 方案取舍</li>
+<li>&ldquo;限界上下文是什么？怎么划？&quot;——统一语言、模型边界、上下文映射</li>
+</ol>
+<p><strong>自查清单：</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> 能说出系统核心指标：QPS、TP99、SLA、数据规模</li>
+<li><input disabled="" type="checkbox"> 能画出流量模型并推导资源量级</li>
+<li><input disabled="" type="checkbox"> 能说明每个边界的划分依据（变化/团队/故障/扩展）</li>
+<li><input disabled="" type="checkbox"> 能说清系统/模块/服务三个边界各自在哪</li>
+</ul>
+<h2 id="相关阅读">相关阅读</h2>
+<ul>
+<li><a href="/posts/%E6%94%AF%E4%BB%98%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%BA%8C%E6%94%AF%E4%BB%98%E6%A0%B8%E5%BF%83%E9%A2%86%E5%9F%9F%E5%BB%BA%E6%A8%A1ddd/">支付系统架构设计（二）：支付核心领域建模（DDD）</a></li>
+<li><a href="/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E4%B8%80%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3%E4%B8%8E%E6%96%B9%E6%B3%95%E8%AE%BA/">分布式系统设计（一）：设计思想与方法论</a></li>
+<li>下一篇：<a href="/posts/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95%E8%AE%BA%E4%BA%8C%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B8%8E%E5%88%86%E5%B1%82/">模块化与分层</a></li>
+</ul>
+        </div>
+    </article>
+</div>
+
+        </div>
+    </main>
+    
+    
+    <footer class="footer">
+    <div class="footer-container">
+        <div class="footer-social">
+            
+            <a href="https://github.com/liwenqikeep" target="_blank" class="social-link" title="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            
+            
+            <a href="mailto:liwenqikeep@foxmail.com" class="social-link" title="邮箱">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </a>
+            
+        </div>
+        
+        <div class="footer-info">
+            <p>&copy; 2026 Liwenqi. All rights reserved.</p>
+            <p>Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></p>
+        </div>
+    </div>
+</footer>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="/js/main.js"></script>
+    <script src="/js/toc.js"></script>
+    
+    
+</body>
+</html>

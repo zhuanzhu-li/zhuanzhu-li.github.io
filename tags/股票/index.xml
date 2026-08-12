@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+	<channel>
+		<title>股票 on Liwenqi&#39;s Blog</title>
+		<link>https://liwenqikeep.github.io/tags/%E8%82%A1%E7%A5%A8/</link>
+		<description>Recent content in 股票 on Liwenqi&#39;s Blog</description>
+		<generator>Hugo</generator>
+		<language>zh-cn</language>
+		
+		
+		
+			<copyright>Liwenqi</copyright>
+		
+		
+			<lastBuildDate>Tue, 11 Aug 2026 00:00:00 +0000</lastBuildDate>
+		
+			<atom:link href="https://liwenqikeep.github.io/tags/%E8%82%A1%E7%A5%A8/index.xml" rel="self" type="application/rss+xml" />
+			<item>
+				<title>股票 Agent 实战（二）：财报解读与结构化输出</title>
+				<link>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%8C%E8%B4%A2%E6%8A%A5%E8%A7%A3%E8%AF%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%8C%E8%B4%A2%E6%8A%A5%E8%A7%A3%E8%AF%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA/</guid>
+				<description>&lt;blockquote&gt;&#xA;&lt;p&gt;&lt;strong&gt;系列导航&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/&#34;&gt;股票 Agent 实战（一）：把行情变成工具&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;本文：股票 Agent 实战（二）：财报解读与结构化输出&lt;/li&gt;&#xA;&lt;li&gt;下一篇：盯盘提醒（写作中）&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;blockquote&gt;&#xA;&lt;p&gt;📚 &lt;strong&gt;推荐阅读（前置知识）&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E5%9B%9B%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E4%B8%8E%E9%87%8D%E8%AF%95/&#34;&gt;AI Harness 实战（四）：结构化输出与重试&lt;/a&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/blockquote&gt;</description>
+			</item>
+			<item>
+				<title>股票 Agent 实战（六）：预测结果存储——固定结构 &#43; 可查询</title>
+				<link>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E5%85%AD%E9%A2%84%E6%B5%8B%E7%BB%93%E6%9E%9C%E5%AD%98%E5%82%A8%E5%9B%BA%E5%AE%9A%E7%BB%93%E6%9E%84--%E5%8F%AF%E6%9F%A5%E8%AF%A2/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E5%85%AD%E9%A2%84%E6%B5%8B%E7%BB%93%E6%9E%9C%E5%AD%98%E5%82%A8%E5%9B%BA%E5%AE%9A%E7%BB%93%E6%9E%84--%E5%8F%AF%E6%9F%A5%E8%AF%A2/</guid>
+				<description>&lt;blockquote&gt;&#xA;&lt;p&gt;&lt;strong&gt;系列导航&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/&#34;&gt;股票 Agent 实战（一）：把行情变成工具&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%8C%E8%B4%A2%E6%8A%A5%E8%A7%A3%E8%AF%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA/&#34;&gt;股票 Agent 实战（二）：财报解读与结构化输出&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%89%E7%9B%AF%E7%9B%98%E6%8F%90%E9%86%92%E4%BB%8E%E8%A2%AB%E5%8A%A8%E9%97%AE%E7%AD%94%E5%88%B0%E4%B8%BB%E5%8A%A8%E7%9B%91%E6%8E%A7/&#34;&gt;股票 Agent 实战（三）：盯盘提醒&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E5%9B%9B%E8%88%86%E6%83%85%E7%9B%91%E6%8E%A7%E8%AE%A9-agent-%E7%9F%A5%E9%81%93%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B6%A8%E8%B7%8C/&#34;&gt;股票 Agent 实战（四）：舆情监控&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%94%E5%A4%9A-agent-%E5%8D%8F%E4%BD%9C%E4%B8%8E%E5%90%91%E9%87%8F%E8%AE%B0%E5%BF%86/&#34;&gt;股票 Agent 实战（五）：多 Agent 协作与向量记忆&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;本文：股票 Agent 实战（六）：预测结果存储——固定结构 + 可查询&lt;/li&gt;&#xA;&lt;li&gt;下一篇：按后续规划另行展开&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/blockquote&gt;</description>
+			</item>
+			<item>
+				<title>股票 Agent 实战（七）：预测 vs 实际——无框架按天可视化</title>
+				<link>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%83%E9%A2%84%E6%B5%8B-vs-%E5%AE%9E%E9%99%85%E6%97%A0%E6%A1%86%E6%9E%B6%E6%8C%89%E5%A4%A9%E5%8F%AF%E8%A7%86%E5%8C%96/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%83%E9%A2%84%E6%B5%8B-vs-%E5%AE%9E%E9%99%85%E6%97%A0%E6%A1%86%E6%9E%B6%E6%8C%89%E5%A4%A9%E5%8F%AF%E8%A7%86%E5%8C%96/</guid>
+				<description>&lt;blockquote&gt;&#xA;&lt;p&gt;&lt;strong&gt;系列导航&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/&#34;&gt;股票 Agent 实战（一）：把行情变成工具&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%8C%E8%B4%A2%E6%8A%A5%E8%A7%A3%E8%AF%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA/&#34;&gt;股票 Agent 实战（二）：财报解读与结构化输出&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%89%E7%9B%AF%E7%9B%98%E6%8F%90%E9%86%92%E4%BB%8E%E8%A2%AB%E5%8A%A8%E9%97%AE%E7%AD%94%E5%88%B0%E4%B8%BB%E5%8A%A8%E7%9B%91%E6%8E%A7/&#34;&gt;股票 Agent 实战（三）：盯盘提醒&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E5%9B%9B%E8%88%86%E6%83%85%E7%9B%91%E6%8E%A7%E8%AE%A9-agent-%E7%9F%A5%E9%81%93%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B6%A8%E8%B7%8C/&#34;&gt;股票 Agent 实战（四）：舆情监控&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%94%E5%A4%9A-agent-%E5%8D%8F%E4%BD%9C%E4%B8%8E%E5%90%91%E9%87%8F%E8%AE%B0%E5%BF%86/&#34;&gt;股票 Agent 实战（五）：多 Agent 协作与向量记忆&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E5%85%AD%E9%A2%84%E6%B5%8B%E7%BB%93%E6%9E%9C%E5%AD%98%E5%82%A8%E5%9B%BA%E5%AE%9A%E7%BB%93%E6%9E%84--%E5%8F%AF%E6%9F%A5%E8%AF%A2/&#34;&gt;股票 Agent 实战（六）：预测结果存储&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;本文：股票 Agent 实战（七）：预测 vs 实际——无框架按天可视化&lt;/li&gt;&#xA;&lt;li&gt;下一篇：按后续规划另行展开&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/blockquote&gt;</description>
+			</item>
+			<item>
+				<title>股票 Agent 实战（三）：盯盘提醒——从被动问答到主动监控</title>
+				<link>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%89%E7%9B%AF%E7%9B%98%E6%8F%90%E9%86%92%E4%BB%8E%E8%A2%AB%E5%8A%A8%E9%97%AE%E7%AD%94%E5%88%B0%E4%B8%BB%E5%8A%A8%E7%9B%91%E6%8E%A7/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%89%E7%9B%AF%E7%9B%98%E6%8F%90%E9%86%92%E4%BB%8E%E8%A2%AB%E5%8A%A8%E9%97%AE%E7%AD%94%E5%88%B0%E4%B8%BB%E5%8A%A8%E7%9B%91%E6%8E%A7/</guid>
+				<description>&lt;blockquote&gt;&#xA;&lt;p&gt;&lt;strong&gt;系列导航&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/&#34;&gt;股票 Agent 实战（一）：把行情变成工具&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%8C%E8%B4%A2%E6%8A%A5%E8%A7%A3%E8%AF%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA/&#34;&gt;股票 Agent 实战（二）：财报解读与结构化输出&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;本文：股票 Agent 实战（三）：盯盘提醒——从被动问答到主动监控&lt;/li&gt;&#xA;&lt;li&gt;下一篇：舆情监控（写作中）&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/blockquote&gt;</description>
+			</item>
+			<item>
+				<title>股票 Agent 实战（四）：舆情监控——让 agent 知道为什么涨跌</title>
+				<link>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E5%9B%9B%E8%88%86%E6%83%85%E7%9B%91%E6%8E%A7%E8%AE%A9-agent-%E7%9F%A5%E9%81%93%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B6%A8%E8%B7%8C/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E5%9B%9B%E8%88%86%E6%83%85%E7%9B%91%E6%8E%A7%E8%AE%A9-agent-%E7%9F%A5%E9%81%93%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B6%A8%E8%B7%8C/</guid>
+				<description>&lt;blockquote&gt;&#xA;&lt;p&gt;&lt;strong&gt;系列导航&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/&#34;&gt;股票 Agent 实战（一）：把行情变成工具&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%8C%E8%B4%A2%E6%8A%A5%E8%A7%A3%E8%AF%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA/&#34;&gt;股票 Agent 实战（二）：财报解读与结构化输出&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%89%E7%9B%AF%E7%9B%98%E6%8F%90%E9%86%92%E4%BB%8E%E8%A2%AB%E5%8A%A8%E9%97%AE%E7%AD%94%E5%88%B0%E4%B8%BB%E5%8A%A8%E7%9B%91%E6%8E%A7/&#34;&gt;股票 Agent 实战（三）：盯盘提醒&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;本文：股票 Agent 实战（四）：舆情监控——让 agent 知道为什么涨跌&lt;/li&gt;&#xA;&lt;li&gt;下一篇：记忆与多 Agent（写作中）&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/blockquote&gt;</description>
+			</item>
+			<item>
+				<title>股票 Agent 实战（五）：多 Agent 协作与向量记忆</title>
+				<link>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%94%E5%A4%9A-agent-%E5%8D%8F%E4%BD%9C%E4%B8%8E%E5%90%91%E9%87%8F%E8%AE%B0%E5%BF%86/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%94%E5%A4%9A-agent-%E5%8D%8F%E4%BD%9C%E4%B8%8E%E5%90%91%E9%87%8F%E8%AE%B0%E5%BF%86/</guid>
+				<description>&lt;blockquote&gt;&#xA;&lt;p&gt;&lt;strong&gt;系列导航&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/&#34;&gt;股票 Agent 实战（一）：把行情变成工具&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%BA%8C%E8%B4%A2%E6%8A%A5%E8%A7%A3%E8%AF%BB%E4%B8%8E%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA/&#34;&gt;股票 Agent 实战（二）：财报解读与结构化输出&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%89%E7%9B%AF%E7%9B%98%E6%8F%90%E9%86%92%E4%BB%8E%E8%A2%AB%E5%8A%A8%E9%97%AE%E7%AD%94%E5%88%B0%E4%B8%BB%E5%8A%A8%E7%9B%91%E6%8E%A7/&#34;&gt;股票 Agent 实战（三）：盯盘提醒&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E5%9B%9B%E8%88%86%E6%83%85%E7%9B%91%E6%8E%A7%E8%AE%A9-agent-%E7%9F%A5%E9%81%93%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B6%A8%E8%B7%8C/&#34;&gt;股票 Agent 实战（四）：舆情监控&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;本文：股票 Agent 实战（五）：多 Agent 协作与向量记忆&lt;/li&gt;&#xA;&lt;li&gt;下一篇：按后续规划另行展开&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/blockquote&gt;</description>
+			</item>
+			<item>
+				<title>股票 Agent 实战（一）：把行情变成工具</title>
+				<link>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/</link>
+				<pubDate>Tue, 11 Aug 2026 00:00:00 +0000</pubDate>
+				<guid>https://liwenqikeep.github.io/posts/%E8%82%A1%E7%A5%A8-agent-%E5%AE%9E%E6%88%98%E4%B8%80%E6%8A%8A%E8%A1%8C%E6%83%85%E5%8F%98%E6%88%90%E5%B7%A5%E5%85%B7/</guid>
+				<description>&lt;blockquote&gt;&#xA;&lt;p&gt;&lt;strong&gt;系列导航&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;本文：股票 Agent 实战（一）：把行情变成工具&lt;/li&gt;&#xA;&lt;li&gt;下一篇：财报解读（写作中）&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;blockquote&gt;&#xA;&lt;p&gt;📚 &lt;strong&gt;推荐阅读（前置知识）&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%80%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-harness/&#34;&gt;AI Harness 实战（一）：为什么需要 harness&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%89%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E5%BE%AA%E7%8E%AF/&#34;&gt;AI Harness 实战（三）：工具调用循环&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;a href=&#34;https://liwenqikeep.github.io/posts/ai-harness-%E5%B7%A5%E7%A8%8B%E5%AE%9E%E6%88%98%E4%B8%83%E5%A6%82%E4%BD%95%E8%AF%84%E6%B5%8B%E8%BF%99%E4%B8%AA-harness/&#34;&gt;AI Harness 实战（七）：如何评测这个 harness&lt;/a&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/blockquote&gt;</description>
+			</item>
+	</channel>
+</rss>
